@@ -2497,7 +2497,7 @@ function onLongPress() {
   if (inlineId) endInline();                 // on empty space: a new sticky, placed where the finger lets go
   const p = ptrs.get(g.pid) || {x: g.sx, y: g.sy};
   const w = toWorld(g.sx, g.sy);
-  const n = createNote(null, w.x - W / 2, w.y - H / 2);
+  const n = createNote(w.x - W / 2, w.y - H / 2);
   select(n.id);
   g = {type: 'create', pid: g.pid, newId: n.id, cx: p.x, cy: p.y, moved: false};
 }
@@ -2692,7 +2692,7 @@ map.addEventListener('pointerdown', e => { lastPtrType = e.pointerType; }, true)
 map.addEventListener('dblclick', e => {
   if (selMode || editing || lastPtrType !== 'mouse' || e.target.closest('.note')) return;   // editing: that double-click opened details
   const w = toWorld(e.clientX, e.clientY);
-  const n = createNote(null, w.x - W / 2, w.y - H / 2);
+  const n = createNote(w.x - W / 2, w.y - H / 2);
   startInline(n.id);
 });
 map.addEventListener('wheel', e => {
@@ -3383,7 +3383,7 @@ function addAtCenter() {
   const R = visibleRegion();
   const w = toWorld((R.left + R.right) / 2, (R.top + R.bottom) / 2 - 40);
   const s = freeSpotNear(Math.round(w.x - W / 2), Math.round(w.y - H / 2), W, H);
-  startInline(createNote(null, s.x, s.y).id);
+  startInline(createNote(s.x, s.y).id);
 }
 $('#btn-add').addEventListener('click', () => addAtCenter());
 const menu = $('#menu');
