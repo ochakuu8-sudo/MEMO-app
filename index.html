@@ -712,7 +712,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
     <div class="sh-body">
       <input id="f-title" type="text" placeholder="タイトル" enterkeyhint="next" autocomplete="off" autocapitalize="off">
       <textarea id="f-body" placeholder="メモ" rows="3"></textarea>
-      <div class="ttl-row"><div class="acts"><button id="f-ttl" class="chip" type="button" aria-pressed="false">タイトルを付ける</button><button id="f-sq" class="chip" type="button">正方形に戻す</button></div><span class="hint" id="f-when"></span></div>
+      <div class="ttl-row"><div class="acts"><button id="f-ttl" class="chip" type="button" aria-pressed="false">タイトルを付ける</button><button id="f-sq" class="chip" type="button">元の大きさに戻す</button></div><span class="hint" id="f-when"></span></div>
       <div class="sec">
         <div class="sec-head"><h3 id="links-label">つながり</h3><button id="add-linked" class="chip accent" type="button">＋ つないで追加</button></div>
         <ul id="links-list"></ul>
@@ -779,11 +779,12 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 document.documentElement.lang = 'ja';
 
 /* ---------- constants ---------- */
-/* stickies are square text boxes to begin with (W × H), and each can be resized: n.w is its width,
-   n.sh the height chosen for it. The text is never hidden behind a short box: if it needs more room
-   the box grows taller (n.h is the measured height actually shown). */
-const W = 150, H = 150, GX = 64, GY = 18;
-const MIN_W = 96, MAX_W = 640, MIN_H = 48, MAX_H = 960, LINE = 24;
+/* stickies are text boxes W wide and two lines tall (H) to begin with, and each can be resized: n.w is
+   its width, n.sh the height chosen for it. The text is never hidden behind a short box: if it needs more
+   room the box grows taller (n.h is the measured height actually shown). */
+const LINE = 24;
+const W = 150, H = 2 * LINE + 24, GX = 64, GY = 18;
+const MIN_W = 96, MAX_W = 640, MIN_H = 48, MAX_H = 960;
 const OLD_W = 184;                           // width of the text boxes before stickies became squares
 const wOf = n => n.w || W, hOf = n => n.h || n.sh || H;
 const clampOf = n => Math.max(12, Math.floor(((n.sh || H) - 20) / FLINE[nv(n, 'fz')])) - (n.ht ? 2 : 0);   // most lines a box shows
@@ -1053,7 +1054,7 @@ function sanitize(arr, v, larr) {
   for (const n of out) delete n._p;
   return {notes: out, links: ls};
 }
-/* One-time change to squares (data from before v4): every sticky becomes a W × H square and a title becomes
+/* One-time change to the usual size (data from before v4): every sticky becomes W × H and a title becomes
    the first line of the text; then, top to bottom, a sticky that now runs into one above it moves down. */
 function squareUp(ids) {
   const set = new Set(ids);
@@ -3168,7 +3169,8 @@ function openInside(id) { if (!notes.has(id)) return; fresh.delete(id); enterBoa
 $('#itb-in').addEventListener('click', () => { if (inlineId) openInside(inlineId); });
 
 /* resizing: drag the knob on the corner of the sticky being written. Any size is fine; near a square
-   (or the usual width) it settles on it, and the text is never hidden: the box stays at least as tall as it. */
+   (or the usual width or height) it settles on it, and the text is never hidden: the box stays at least as
+   tall as it. At a square or the usual size the knob lights up. */
 function startResize(e) {
   const n = notes.get(inlineId), r = els.get(inlineId);
   if (!n || !r) return;
@@ -3182,8 +3184,9 @@ function resizeTo(cx, cy) {
   let w = clamp(g.w0 + (cx - g.sx) / view.z, MIN_W, MAX_W);
   let h = clamp(g.h0 + (cy - g.sy) / view.z, MIN_H, MAX_H);
   if (Math.abs(w - W) < near) w = W;
-  const sq = Math.abs(w - h) < near;
-  if (sq) h = w;
+  if (Math.abs(h - H) < near) h = H;
+  if (Math.abs(w - h) < near) h = w;
+  const sq = h === w || (w === W && h === H);
   if (sq !== g.sq) { if (g.sq !== null && sq) haptic(); g.sq = sq; r.el.classList.toggle('square', sq); }
   w = Math.round(w); h = Math.round(h);
   if (w === n.w && h === n.sh) return;
@@ -3594,9 +3597,9 @@ $('#m-help').addEventListener('click', () => {
   closeMenu();
   const ul = document.createElement('ul');
   [
-    '何もない所を長押し → 正方形の付箋ができて、指を離すとそのまま書ける',
+    '何もない所を長押し → 付箋ができて、指を離すとそのまま書ける',
     '付箋をタップ → その場で書き直せる（下のバーの「完了」で終わる）',
-    '書いている間、付箋の右下の丸を引っぱる → 大きさを自由に変えられる（正方形の所で止まりやすい）',
+    '書いている間、付箋の右下の丸を引っぱる → 大きさを自由に変えられる（元の大きさや正方形の所で止まりやすい）',
     '書いている間、付箋の右の ● を引っぱってほかの付箋の上で離す → 線でつながる。何もない所で離すと、つながった新しい付箋ができる',
     '線をタップ → 線・矢印・両矢印、矢印の向き、曲線・直線・カギ線、太さを変えたり、線を消したりできる',
     '線のパネルの「色・線の種類・先の形・ラベル」→ 線の色、実線・破線・点線、矢印の先（ひらいた・三角・丸）、線の真ん中に出す短い文字。「見た目をコピー」「貼り付け」でほかの線にも同じ見た目を付けられる',
@@ -3729,7 +3732,7 @@ function boot() {
   else if (hadParents && !before) setTimeout(() => toast('子メモの線は、付箋どうしをつなぐふつうの線になりました。線をタップすると矢印などに変えられます'), 900);
   if (before) {
     save();
-    setTimeout(() => toast('付箋を正方形にそろえて並べ直しました（タイトルは本文の1行目に）', '元に戻す', () => {
+    setTimeout(() => toast('付箋を同じ大きさにそろえて並べ直しました（タイトルは本文の1行目に）', '元に戻す', () => {
       if (inlineId) endInline(true);
       if (editing) hideSheet();
       notes.clear();
