@@ -1055,7 +1055,7 @@ function updateEmpty(isEmpty) {
     e.querySelector('span').textContent = '何もない所を長押しすると付箋を置けます。上のバーからいつでも戻れます。';
   } else {
     e.querySelector('strong').textContent = '何もない所を長押し';
-    e.querySelector('span').textContent = '指を離すと付箋に書き込めます。付箋を長押しすると、その中に子メモができます。';
+    e.querySelector('span').textContent = '指を離すと付箋に書き込めます。付箋を長押しすると、その付箋の中に入れます。';
   }
 }
 function renderAll() {
@@ -2096,7 +2096,7 @@ map.addEventListener('pointerdown', e => {
   try { map.setPointerCapture(e.pointerId); } catch (err) {}
   ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
   if (ptrs.size === 2) {
-    if (g && (g.type === 'drag' || g.type === 'create' || g.type === 'resize')) return;
+    if (g && (g.type === 'drag' || g.type === 'create' || g.type === 'resize' || g.type === 'held')) return;
     cancelPress();
     startPinch();
     return;
@@ -2115,20 +2115,18 @@ function onLongPress() {
   if (!g || g.type !== 'press') return;
   burstRing();
   haptic();
-  if (inlineId) endInline();
-  const p = ptrs.get(g.pid) || {x: g.sx, y: g.sy};
-  let n;
-  if (g.id && notes.has(g.id)) {
-    const parent = notes.get(g.id);
-    const r = els.get(g.id);
+  if (g.id && notes.has(g.id)) {             // on a sticky: into the space inside it
+    const id = g.id, r = els.get(id);
     if (r) r.el.classList.remove('pressing');
-    if (parent.k) { parent.k = false; renderAll(); }
-    const slot = slotForChild(parent);
-    n = createNote(parent.id, slot.x, slot.y);
-  } else {
-    const w = toWorld(g.sx, g.sy);
-    n = createNote(null, w.x - W / 2, w.y - H / 2);
+    g = {type: 'held', pid: g.pid};          // the finger is still down, with nothing left to do
+    lastTap = null;
+    openInside(id);
+    return;
   }
+  if (inlineId) endInline();                 // on empty space: a new sticky, placed where the finger lets go
+  const p = ptrs.get(g.pid) || {x: g.sx, y: g.sy};
+  const w = toWorld(g.sx, g.sy);
+  const n = createNote(null, w.x - W / 2, w.y - H / 2);
   select(n.id);
   g = {type: 'create', pid: g.pid, newId: n.id, cx: p.x, cy: p.y, moved: false};
 }
@@ -2400,8 +2398,8 @@ function fillEditorMeta(n) {
   $('#b-open').textContent = '中を開く' + (cnt ? '（' + cnt + '件）' : '');
   $('#b-move').hidden = !hasMoveTarget(n);
   $('#inside-hint').textContent = curBoard === n.id ? 'いまこの付箋の中にいます。上のバーで外に戻れます。'
-    : cnt ? 'この付箋の中に付箋が' + cnt + '件あります。付箋の左下の ▣ をタップしても中に入れます。'
-    : '「中を開く」で、この付箋の中に付箋を置けます。ほかの付箋をドラッグして、この付箋の左下に出る ▣ の上で離しても入れられます。';
+    : cnt ? 'この付箋の中に付箋が' + cnt + '件あります。付箋を長押しするか、左下の ▣ をタップしても中に入れます。'
+    : '付箋を長押しするか「中を開く」で、この付箋の中に付箋を置けます。ほかの付箋をドラッグして、この付箋の左下に出る ▣ の上で離しても入れられます。';
   swatches.replaceChildren();
   const opts = n.p ? [null, ...COLORS] : COLORS;
   for (const c of opts) {
@@ -3189,10 +3187,11 @@ $('#m-help').addEventListener('click', () => {
     '付箋をタップ → その場で書き直せる（下のバーの「完了」で終わる）',
     '書いている間、付箋の右下の丸を引っぱる → 大きさを自由に変えられる（正方形の所で止まりやすい）',
     '付箋をダブルタップ → 詳細（色・子メモ・中の付箋など）。タイトルが欲しいときは詳細の「タイトルを付ける」',
-    '付箋を長押し → その中に子メモができ、線でつながる',
-    '長押しのまま指を動かすと、好きな場所に置ける',
+    '付箋を長押し → その付箋の中に入る（中にも付箋を置ける。上のバーで外に戻る）',
+    '何もない所を長押しのまま指を動かすと、好きな場所に付箋を置ける',
+    '子メモ（線でつながる付箋）は、詳細の「＋ 子メモ」か、付箋を別の付箋の上へドラッグして作る',
     '付箋をドラッグ → 子メモごと移動。別の付箋の上で離すと、その付箋の子メモになる',
-    'どの付箋も、中に付箋を置ける：書いている間の下のバーの「中へ」か、詳細の「中を開く」でその付箋の中に入る。上のバーで外に戻る',
+    '付箋の中へは、書いている間の下のバーの「中へ」や、詳細の「中を開く」からも入れる',
     '中に付箋がある付箋は左下に ▣ と枚数が出る。▣ をタップするとその付箋の中に入れる',
     '付箋をドラッグすると、ほかの付箋の左下に ▣ が出る。その上で離すと、その付箋の中に入る。中では、上のバーへドラッグすると外に出せる',
     'ピンチで拡大・縮小。引いても文字は付箋に収まる大きさで全文が見え、さらに引くとグループ名だけになる',
@@ -3221,19 +3220,19 @@ function seed() {
   add(a, '付箋をタップすると、その場で書き直せます');
   add(a, '書いている間に右下の丸を引っぱると、大きさを変えられます');
   add(a, 'ダブルタップで詳細（色・子メモ・中の付箋など）');
-  add(a, '付箋を長押しすると子メモができて、線でつながります');
+  add(a, '付箋を長押しすると、その付箋の中に入れます。中にも付箋を置けます');
   add(a, 'ドラッグで移動。別の付箋の上で離すと、その中に入ります');
   add(a, 'ピンチで拡大・縮小。引くと全体を見渡せます');
   add(a, '下の「一覧」から階層ツリーと検索');
   add(a, '右下の数字をタップすると子メモを折りたためます');
   add(a, '下の「選択」で、まとめて削除や切り離しができます');
-  add(a, '書いている間の「中へ」で、付箋の中に付箋を置けます');
+  add(a, '子メモは、詳細の「＋ 子メモ」か、付箋を別の付箋の上へドラッグして作れます');
   const c = add(null, '例：アイデア', {c: 'pink'});
   const blog = add(c, 'ブログのネタ');
   add(blog, 'メモの整理術');
   add(blog, '朝の30分ルーティン');
   add(c, '欲しいもの\n電動歯ブラシ\n本棚');
-  const trip = add(null, '例：旅行の計画\n左下の ▣ をタップすると、この付箋の中に入れます', {c: 'sky'});
+  const trip = add(null, '例：旅行の計画\n長押しすると、この付箋の中に入れます', {c: 'sky'});
   const k = add(null, '例：京都旅行', {c: 'mint', bd: trip});
   const d1 = add(k, '1日目');
   add(d1, '伏見稲荷は朝7時台に。人が少ないうちに千本鳥居へ');
