@@ -35,6 +35,7 @@
   --font-ui:system-ui,-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
   --font-note:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","Zen Maru Gothic","BIZ UDPGothic",var(--font-ui);
   --font-num:ui-rounded,"SF Pro Rounded",var(--font-ui);
+  --font-mincho:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Noto Serif CJK JP",serif;
   --kb:0px;
   --edge:#8E95A0;
   --check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6.5 12.5 3.6 3.6 7.4-8' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -110,13 +111,29 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 #world.moving{will-change:transform}
 #edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 /* relations between stickies: a line, an arrow or a two-way arrow. Each drawn line (.e) has a wide invisible
-   twin (.lh) that takes the taps, so even a thin line is easy to pick. */
-#edges .e{fill:none;stroke:var(--edge);stroke-width:calc(2px * var(--iz));stroke-linecap:round;stroke-linejoin:round}
+   twin (.lh) that takes the taps, so even a thin line is easy to pick; it also glows behind the line when the
+   line is picked (.sel) or belongs to the picked sticky (.hot), so the line keeps its own colour. Arrow ends
+   are drawn apart (.ah) so a dashed line still has whole ends. Width (--sw) and colour (--lc) come from the
+   line's w- and lc- classes; everything stays the same size on screen at any zoom. */
+#edges .e,#edges .ah{fill:none;stroke:var(--lc,var(--edge));stroke-width:calc(var(--sw,2.5px) * var(--iz));stroke-linecap:round;stroke-linejoin:round}
+#edges .ah.fill{fill:var(--lc,var(--edge));stroke-width:calc(1px * var(--iz))}
+#edges .w-s{--sw:1.5px} #edges .w-l{--sw:4px} #edges .w-xl{--sw:6.5px}
+#edges .e.d-dashed{stroke-dasharray:calc((var(--sw,2.5px) * 3.2 + 3px) * var(--iz)) calc((var(--sw,2.5px) * 2.2 + 3px) * var(--iz))}
+#edges .e.d-dotted{stroke-dasharray:0 calc((var(--sw,2.5px) * 2.4 + 2.5px) * var(--iz))}
+.lc-yellow{--lc:var(--yellow-ink)} .lc-mint{--lc:var(--mint-ink)} .lc-pink{--lc:var(--pink-ink)} .lc-sky{--lc:var(--sky-ink)}
+.lc-lilac{--lc:var(--lilac-ink)} .lc-peach{--lc:var(--peach-ink)} .lc-ink{--lc:var(--fg)} .lc-grey{--lc:var(--edge)}
 #edges .lh{fill:none;stroke:transparent;stroke-width:calc(24px * var(--iz));pointer-events:stroke;cursor:pointer}
-#edges .e.hot{stroke:var(--accent);stroke-width:calc(2.5px * var(--iz))}
-#edges .e.sel{stroke:var(--accent);stroke-width:calc(4px * var(--iz))}
+#edges .lh.hot{stroke:color-mix(in srgb,var(--accent) 13%,transparent)}
+#edges .lh.sel{stroke:color-mix(in srgb,var(--accent) 28%,transparent)}
 #edges .e.tmp{stroke:var(--accent);stroke-dasharray:calc(7px * var(--iz)) calc(6px * var(--iz))}
-#world.selecting #edges .lh,#world.dropping #edges .lh{pointer-events:none}
+#world.selecting #edges .lh,#world.dropping #edges .lh,#world.selecting .llbl,#world.dropping .llbl{pointer-events:none}
+/* a line's label sits in the middle of it, above the lines and below the stickies */
+#lbls{position:absolute;left:0;top:0}
+.llbl{
+  position:absolute;left:0;top:0;padding:1px 9px;border-radius:999px;white-space:nowrap;cursor:pointer;
+  font:600 13px/1.45 var(--font-ui);color:var(--fg);background:var(--surface);box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(0,0,0,.12);
+}
+.llbl.sel{box-shadow:0 0 0 2px var(--accent)}
 #notes{position:absolute;left:0;top:0}
 
 .note{position:absolute;left:0;top:0;width:150px;height:150px;contain:layout style}
@@ -148,6 +165,37 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
    corner to resize it, and a handle on its right side to draw a line from it */
 .note.inline{z-index:5}
 .note.inline .card{overflow:visible;outline:2.5px solid var(--accent);outline-offset:3px}
+/* how a sticky looks (B1–B6): only what differs from the usual square paper sticky gets a class */
+#world .note.sh-rounded .card,.note.measure.sh-rounded .card{border-radius:18px}
+#world .note.sh-round .card,.note.measure.sh-round .card{border-radius:50%;padding:17% 13%;justify-content:center;text-align:center}
+.note.sh-fold .card::after{
+  content:"";position:absolute;right:0;top:0;width:22px;height:22px;pointer-events:none;
+  background:linear-gradient(225deg,var(--bg) 50%,color-mix(in srgb,var(--paper) 62%,var(--ink)) 50%);
+}
+.note.lk-card .card{background:linear-gradient(to bottom,var(--paper) 0 12px,transparent 12px),var(--surface);color:var(--fg);padding-top:18px;box-shadow:var(--note-shadow),inset 0 0 0 1px var(--line)}
+.note.lk-line .card{background:var(--surface);color:var(--fg);box-shadow:inset 0 0 0 2.5px var(--ink)}
+.note.lk-bold .card{background:var(--ink);color:var(--surface)}
+#world .note.sh-round.lk-card .card{background:var(--surface);box-shadow:var(--note-shadow),inset 0 0 0 7px var(--paper)}
+.note.sh-fold.lk-card .card::after,.note.sh-fold.lk-line .card::after{background:linear-gradient(225deg,var(--bg) 50%,var(--paper) 50%)}
+.note.lk-card .ied textarea,.note.lk-line .ied textarea{color:var(--fg)}
+.note.lk-bold .ied textarea{color:var(--surface)}
+.note.lk-card.empty .x::before,.note.lk-line.empty .x::before,.note.lk-card .t:empty::before,.note.lk-line .t:empty::before,
+.note.lk-card .ied textarea::placeholder,.note.lk-line .ied textarea::placeholder{color:var(--muted)}
+.note.lk-bold.empty .x::before,.note.lk-bold .t:empty::before,.note.lk-bold .ied textarea::placeholder{color:color-mix(in srgb,var(--surface) 62%,transparent)}
+.note.fz-s .x,.note.fz-s .ied .ie{font-size:13px}
+.note.fz-s .t,.note.fz-s .ied .ie-t{font-size:14px}
+.note.fz-l .x,.note.fz-l .ied .ie{font-size:20px;line-height:1.4}
+.note.fz-l .t,.note.fz-l .ied .ie-t{font-size:21px}
+.note.fz-xl .x,.note.fz-xl .ied .ie{font-size:25px;line-height:1.3;font-weight:700}
+.note.fz-xl .t,.note.fz-xl .ied .ie-t{font-size:26px}
+.note.al-center .card{justify-content:center;text-align:center}
+.note.al-center .ied textarea{text-align:center}
+.note.ff-gothic .x,.note.ff-gothic .ied .ie{font-family:var(--font-ui)}
+.note.ff-mincho .x,.note.ff-mincho .t,.note.ff-mincho .ied textarea{font-family:var(--font-mincho)}
+.stp{
+  position:absolute;z-index:2;right:-9px;top:-11px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  font-size:17px;line-height:1;background:var(--surface);box-shadow:0 2px 6px rgba(0,0,0,.22),0 0 0 1px var(--line);pointer-events:none;
+}
 .note.inline .t,.note.inline .x{display:none!important}
 .rz{
   position:absolute;z-index:6;right:-4px;bottom:-4px;width:calc(46px * var(--iz));height:calc(46px * var(--iz));
@@ -217,7 +265,8 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .note.drop-in > .inb{background:var(--accent);color:var(--accent-fg);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
 .note.inline > .inb{display:none}
 #world.searching .note:not(.match){opacity:.2}
-#world.searching .e{stroke-opacity:.12}
+#world.searching .e,#world.searching .ah{stroke-opacity:.12}
+#world.searching .ah.fill,#world.searching .llbl{opacity:.15}
 .note.match .card{outline:2.5px solid var(--accent);outline-offset:3px}
 
 /* semantic zoom: middle distance keeps each sticky's first lines (or its title) readable;
@@ -231,7 +280,15 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 #world.z-mid .note.ht .x{-webkit-line-clamp:var(--mlx,1)}
 #world.z-mid .note.ht.nx .x{display:none}
 #world.z-mid .note.lead .t,#world.z-mid .note.lead:not(.ht) .x{font-family:var(--font-ui);font-weight:700;color:var(--ink)}
+#world.z-mid .note.lk-card .card,#world.z-mid .note.lk-line .card{background:var(--surface)}
+#world.z-mid .note.lk-bold .card{background:var(--ink)}
+#world.z-mid .note.lk-bold.lead .t,#world.z-mid .note.lk-bold.lead:not(.ht) .x{color:var(--surface)}
+#world.z-mid .note > .stp{transform:scale(min(var(--iz),2.6));transform-origin:100% 0}
+#world.z-mid .llbl{font-size:calc(13px * var(--lk))}
+#world.z-far .note > .stp,#world.z-far .llbl,#world.selecting .note > .stp{display:none}
 #world.z-far .card{padding:0;overflow:visible;box-shadow:none;border-radius:14px;background:var(--paper);outline-offset:10px}
+#world.z-far .note.lk-bold .card{background:var(--ink)}
+#world.z-far .note.lk-card .card,#world.z-far .note.lk-line .card{background:var(--surface);box-shadow:inset 0 0 0 calc(3px * var(--iz)) var(--ink)}
 #world.z-far .t,#world.z-far .x{display:none}
 #world.z-far .note.lead.ht .t,#world.z-far .note.lead:not(.ht) .x{
   display:block;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
@@ -361,6 +418,20 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13.5px;cursor:pointer;color:var(--fg)}
 .chip.accent{border-color:transparent;background:var(--accent-soft);color:var(--accent);font-weight:600}
 .chip.danger{color:var(--danger)}
+.chip[aria-pressed="true"]{border-color:transparent;background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chip:disabled{opacity:.4;cursor:default}
+.srows{display:flex;flex-direction:column;gap:8px}
+.srow{display:grid;grid-template-columns:6.6em minmax(0,1fr);align-items:center;gap:8px}
+.srow > span{font-size:12.5px;color:var(--muted)}
+.srow .opts{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.srow .chip{padding:6px 11px;font-size:13px;display:inline-flex;align-items:center;gap:5px}
+.srow .chip svg{width:24px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.swb{width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;padding:0;background:var(--paper,var(--lc));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink,var(--fg)) 45%,transparent)}
+.swb.lc{background:var(--lc)}
+.swb[aria-pressed="true"]{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--fg) 30%,transparent),0 0 0 2.5px var(--surface),0 0 0 4.5px var(--accent)}
+.bulk{display:flex;flex-direction:column;gap:14px}
+.bulk h4{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--muted)}
+.bulk .acts{display:flex;flex-wrap:wrap;gap:8px}
 #links-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 #links-list button{
   width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;text-align:left;cursor:pointer;
@@ -468,6 +539,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 @keyframes toastIn{from{opacity:0;transform:translateY(-8px)}}
 #toast button{border:0;background:transparent;color:inherit;font-weight:700;padding:6px 8px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;flex:none}
 #modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(8,10,16,.4);padding:20px}
+#m-content{overflow-y:auto;min-height:0;margin:0 -4px;padding:0 4px}
 .mbox{width:min(400px,100%);background:var(--surface);color:var(--fg);border-radius:18px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;max-height:80vh}
 .mbox h2{margin:0;font:500 18px/1.4 var(--font-note)}
 .mbox p{margin:0;font-size:14.5px;line-height:1.7;color:var(--muted)}
@@ -508,8 +580,8 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 }
 #selbar button{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  width:62px;height:50px;border:0;border-radius:15px;background:transparent;cursor:pointer;
-  font-size:10.5px;letter-spacing:.04em;color:var(--fg);
+  width:min(62px,calc((100vw - 52px) / 5));height:50px;border:0;border-radius:15px;background:transparent;cursor:pointer;
+  font-size:10.5px;letter-spacing:.04em;color:var(--fg);white-space:nowrap;
 }
 #selbar button:active:not(:disabled){background:var(--surface-2)}
 #selbar button:disabled{opacity:.36;cursor:default}
@@ -517,23 +589,37 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 #selbar #sel-done{margin-left:3px;background:var(--accent);color:var(--accent-fg);font-weight:700;box-shadow:0 4px 12px -4px var(--accent)}
 #selbar #sel-done:active{background:var(--accent)}
 
-/* ---------- the panel for the line that was tapped ---------- */
+/* ---------- the panel for the line that was tapped ----------
+   kind, shape and width always; colour, dash, arrow ends, label and copy/paste behind 「もっと」 */
 #linkbar{
-  position:fixed;z-index:12;left:0;right:0;margin:0 auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));
-  width:min(380px,calc(100% - 24px));box-sizing:border-box;padding:6px 8px;border-radius:20px;display:flex;flex-direction:column;gap:2px;
+  position:fixed;z-index:12;left:0;right:0;margin:0 auto;bottom:calc(12px + var(--kb) + env(safe-area-inset-bottom,0px));
+  width:min(400px,calc(100% - 24px));max-height:calc(var(--vvh,100vh) - 90px);overflow-y:auto;overscroll-behavior:contain;
+  box-sizing:border-box;padding:6px 8px;border-radius:20px;display:flex;flex-direction:column;gap:2px;
 }
-.lb-row{display:flex;align-items:center;gap:2px}
-.lb-row h3{margin:0 2px 0 6px;width:2.6em;flex:none;font-size:11.5px;font-weight:600;letter-spacing:.06em;color:var(--muted)}
+:root.kb #linkbar{bottom:calc(8px + var(--kb))}
+.lb-row{display:flex;align-items:center;gap:2px;min-height:44px}
+.lb-row h3{margin:0 2px 0 6px;width:3.3em;flex:none;white-space:nowrap;font-size:11.5px;font-weight:600;letter-spacing:.06em;color:var(--muted)}
 .lb-row .sp{flex:1}
-#linkbar button{
-  flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:48px;
+#linkbar .lbo{
+  flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:46px;
   border:0;border-radius:13px;background:transparent;color:var(--fg);font-size:10.5px;letter-spacing:.03em;cursor:pointer;white-space:nowrap;
 }
-#linkbar button svg{width:26px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-#linkbar button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:700}
-#linkbar button:active{background:var(--surface-2)}
-#linkbar button:disabled{opacity:.34;cursor:default}
+#linkbar .lbo svg{width:26px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#linkbar .lbo[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:700}
+#linkbar .lbo:active{background:var(--surface-2)}
+#linkbar .lbo:disabled{opacity:.34;cursor:default}
 #linkbar #lb-del{color:var(--danger)}
+.lb-sw{display:flex;flex-wrap:wrap;gap:7px;flex:1;min-width:0;padding:4px 0}
+#lb-more{
+  display:flex;align-items:center;justify-content:center;gap:6px;height:34px;margin:2px 0;border:0;border-radius:11px;cursor:pointer;
+  background:var(--surface-2);color:var(--fg);font-size:12.5px;font-weight:600;
+}
+#lb-more svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+#lb-more[aria-expanded="true"] svg{transform:rotate(180deg)}
+#lb-extra{display:flex;flex-direction:column;gap:2px}
+#lb-label{flex:1;min-width:0;height:36px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--fg);padding:0 10px;font-size:16px}
+.lb-acts{gap:8px;padding:4px 0 2px}
+.lb-acts .chip{flex:1}
 :root.link-editing #dock,:root.link-editing #minimap{display:none}
 
 @media (max-width:759px){
@@ -560,6 +646,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
     <div id="grid"></div>
     <div id="world" class="z-near">
       <svg id="edges" width="1" height="1" aria-hidden="true"></svg>
+      <div id="lbls"></div>
       <div id="notes"></div>
     </div>
   </div>
@@ -593,23 +680,23 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <div id="selhead" class="glass" hidden role="status"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.4 12.3 2.5 2.5 4.8-5.1"/></svg><span id="selhead-txt"></span></div>
   <nav id="selbar" class="glass" hidden aria-label="選んだ付箋の操作">
     <button id="sel-all" type="button"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></svg><span id="sel-all-txt">すべて</span></button>
+    <button id="sel-look" type="button" aria-label="選んだ付箋の見た目をまとめて変える"><svg class="i" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 1.9-1 1.4-2-.5-1 .2-2.2 1.4-2.2H17a3.5 3.5 0 0 0 3.5-3.5c0-5.1-3.8-9.3-8.5-9.3z"/><circle cx="7.6" cy="11.4" r="1.1"/><circle cx="10.6" cy="7.4" r="1.1"/><circle cx="15.4" cy="8" r="1.1"/></svg>見た目</button>
     <button id="sel-cut" type="button" aria-label="選んだ付箋の線をすべて外す"><svg class="i" viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.6"/><circle cx="6.5" cy="17" r="2.6"/><path d="M8.7 8.4 19.5 16.8M8.7 15.6 19.5 7.2"/></svg>線を外す</button>
     <button id="sel-del" type="button" aria-label="選んだ付箋を削除"><svg class="i" viewBox="0 0 24 24"><path d="M5 7h14M10 11v6M14 11v6M6.5 7l1 12h9l1-12M9.5 7V4.5h5V7"/></svg>削除</button>
     <button id="sel-done" type="button" aria-label="選択を終える"><svg class="i" viewBox="0 0 24 24"><path d="m5.5 12.5 4.2 4.2 8.8-9.4"/></svg>完了</button>
   </nav>
   <div id="marquee" hidden></div>
   <div id="linkbar" class="glass" hidden role="toolbar" aria-label="選んだ線">
-    <div class="lb-row"><h3>種類</h3>
-      <button id="lb-line" type="button" data-k="line" aria-pressed="false"><svg viewBox="0 0 28 22" aria-hidden="true"><path d="M4 16C11 16 17 6 24 6"/></svg>線</button>
-      <button id="lb-arrow" type="button" data-k="arrow" aria-pressed="false"><svg viewBox="0 0 28 22" aria-hidden="true"><path d="M4 16C11 16 17 6 24 6"/><path d="M18 2.2 24 6l-6 3.8"/></svg>矢印</button>
-      <button id="lb-both" type="button" data-k="both" aria-pressed="false"><svg viewBox="0 0 28 22" aria-hidden="true"><path d="M4 16C11 16 17 6 24 6"/><path d="M18 2.2 24 6l-6 3.8M10 12.2 4 16l6 3.8"/></svg>両矢印</button>
-      <button id="lb-flip" type="button" aria-label="矢印の向きを逆にする"><svg viewBox="0 0 28 22" aria-hidden="true"><path d="M5 8h17l-4-4M23 15H6l4 4"/></svg>逆向き</button>
-    </div>
-    <div class="lb-row"><h3>形</h3>
-      <button id="lb-curve" type="button" data-s="curve" aria-pressed="false"><svg viewBox="0 0 28 22" aria-hidden="true"><path d="M4 16C11 16 17 6 24 6"/></svg>曲線</button>
-      <button id="lb-straight" type="button" data-s="straight" aria-pressed="false"><svg viewBox="0 0 28 22" aria-hidden="true"><path d="M4 16 24 6"/></svg>直線</button>
-      <span class="sp"></span>
-      <button id="lb-del" type="button" aria-label="この線を消す"><svg viewBox="0 0 28 22" aria-hidden="true"><path d="M7 7h14M12 10.5v6M16 10.5v6M8.5 7l1 11h9l1-11M11.5 7V4.5h5V7"/></svg>削除</button>
+    <div class="lb-row" data-row="k"><h3>種類</h3></div>
+    <div class="lb-row" data-row="sh"><h3>形</h3></div>
+    <div class="lb-row" data-row="w"><h3>太さ</h3></div>
+    <button id="lb-more" type="button" aria-expanded="false" aria-controls="lb-extra"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>色・線の種類・先の形・ラベル</button>
+    <div id="lb-extra" hidden>
+      <div class="lb-row" data-row="dash"><h3>線</h3></div>
+      <div class="lb-row" data-row="head"><h3>先</h3></div>
+      <div class="lb-row"><h3>色</h3><div class="lb-sw" data-row="color"></div></div>
+      <div class="lb-row"><h3>ラベル</h3><input id="lb-label" type="text" maxlength="20" placeholder="例：原因、次に" autocomplete="off" enterkeyhint="done" aria-label="線のラベル"></div>
+      <div class="lb-row lb-acts"><button id="lb-copy" class="chip" type="button">見た目をコピー</button><button id="lb-paste" class="chip" type="button">貼り付け</button></div>
     </div>
   </div>
 
@@ -639,6 +726,11 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
       <div class="sec">
         <div class="sec-head"><h3>色</h3></div>
         <div id="swatches" role="radiogroup" aria-label="付箋の色"></div>
+      </div>
+      <div class="sec" id="look-sec">
+        <div class="sec-head"><h3>見た目</h3><div class="acts"><button id="nl-copy" class="chip" type="button">コピー</button><button id="nl-paste" class="chip" type="button">貼り付け</button><button id="nl-reset" class="chip" type="button">元の見た目</button></div></div>
+        <div class="srows" id="note-look"></div>
+        <p class="hint">新しく作る付箋は、最後に選んだ形・見た目・文字の設定になります（色とスタンプはそのつど）。</p>
       </div>
       <div class="sec">
         <div class="acts">
@@ -691,7 +783,7 @@ const W = 150, H = 150, GX = 64, GY = 18;
 const MIN_W = 96, MAX_W = 640, MIN_H = 48, MAX_H = 960, LINE = 24;
 const OLD_W = 184;                           // width of the text boxes before stickies became squares
 const wOf = n => n.w || W, hOf = n => n.h || n.sh || H;
-const clampOf = n => Math.max(12, Math.floor(((n.sh || H) - 20) / LINE)) - (n.ht ? 2 : 0);   // most lines a box shows
+const clampOf = n => Math.max(12, Math.floor(((n.sh || H) - 20) / FLINE[nv(n, 'fz')])) - (n.ht ? 2 : 0);   // most lines a box shows
 const ZMIN = 0.08, ZMAX = 2.5, LONG = 450, SLOP = 9;
 const KEY = 'fusenmap.notes.v1', VKEY = 'fusenmap.view.v1';
 const COLORS = ['yellow', 'mint', 'pink', 'sky', 'lilac', 'peach', 'stone'];
@@ -729,8 +821,49 @@ const store = (() => {
    an arrow (from a to b) or a two-way arrow, curved or straight. Both ends of a link are on the same map. */
 const notes = new Map();          // id -> {id,bd,ht,t,b,w,sh,h,x,y,c,at,s}
 const links = new Map();          // id -> {id,a,b,k,sh}
-const KINDS = ['line', 'arrow', 'both'], SHAPES = ['curve', 'straight'];
-let lastKind = {k: 'line', sh: 'curve'};   // a new link looks like the last one chosen in the line panel
+/* How a link looks (A1–A6) and how a sticky looks (B1–B6). A link or note only carries a value that differs
+   from these defaults; nv / lv read a value with its default. Options: [value, name, icon]. */
+const LINK_DEF = {k: 'line', sh: 'curve', w: 'm', dash: 'solid', head: 'open', color: 'grey'};
+const NOTE_DEF = {shape: 'square', look: 'paper', fz: 'm', al: 'left', ff: 'maru', stamp: ''};
+const CURVE_I = '<path d="M4 16C11 16 17 6 24 6"/>';
+const LINK_OPTS = {
+  k: [['line', '線', CURVE_I], ['arrow', '矢印', CURVE_I + '<path d="M18 2.2 24 6l-6 3.8"/>'], ['both', '両矢印', CURVE_I + '<path d="M18 2.2 24 6l-6 3.8M10 12.2 4 16l6 3.8"/>']],
+  sh: [['curve', '曲線', CURVE_I], ['straight', '直線', '<path d="M4 16 24 6"/>'], ['elbow', 'カギ線', '<path d="M4 16h7.5a2.5 2.5 0 0 0 2.5-2.5v-5A2.5 2.5 0 0 1 16.5 6H24"/>']],
+  w: [['s', '細い', '<path d="M4 11h20" stroke-width="1.2"/>'], ['m', 'ふつう', '<path d="M4 11h20" stroke-width="2.2"/>'],
+      ['l', '太い', '<path d="M4 11h20" stroke-width="3.6"/>'], ['xl', '極太', '<path d="M4 11h20" stroke-width="5.6"/>']],
+  dash: [['solid', '実線', '<path d="M4 11h20"/>'], ['dashed', '破線', '<path d="M4 11h20" stroke-dasharray="4.5 3.5"/>'], ['dotted', '点線', '<path d="M4 11h20" stroke-width="2.6" stroke-dasharray="0 4.4"/>']],
+  head: [['open', 'ひらいた', '<path d="M4 11h17M15.5 6.5 21 11l-5.5 4.5"/>'], ['tri', '三角', '<path d="M4 11h11"/><path d="M14 6.5 22 11l-8 4.5z" fill="currentColor"/>'],
+         ['dot', '丸', '<path d="M4 11h13"/><circle cx="19.5" cy="11" r="3.2" fill="currentColor"/>']],
+  color: [['grey', '灰色'], ['yellow', '黄色'], ['mint', 'ミント'], ['pink', 'ピンク'], ['sky', '水色'], ['lilac', '藤色'], ['peach', 'オレンジ'], ['ink', '文字と同じ色']]
+};
+const NOTE_OPTS = {
+  shape: [['square', '四角'], ['rounded', '角丸'], ['round', 'まる'], ['fold', '角折れ']],
+  look: [['paper', '付箋'], ['card', 'カード'], ['line', 'ふち'], ['bold', 'こい色']],
+  fz: [['s', '小'], ['m', 'ふつう'], ['l', '大'], ['xl', '特大']],
+  al: [['left', '左上'], ['center', 'まん中']],
+  ff: [['maru', '丸ゴシック'], ['gothic', 'ゴシック'], ['mincho', '明朝']],
+  stamp: [['', 'なし'], ['⭐', '⭐'], ['❗', '❗'], ['✅', '✅'], ['❓', '❓'], ['💡', '💡'], ['❤️', '❤️']]
+};
+const NOTE_NAMES = {shape: '形', look: '見た目', fz: '文字の大きさ', al: '文字の位置', ff: '書体', stamp: 'スタンプ'};
+const LINK_NAMES = {k: '種類', sh: '形', w: '太さ', dash: '線', head: '先の形', color: '色'};
+const KINDS = LINK_OPTS.k.map(o => o[0]), SHAPES = LINK_OPTS.sh.map(o => o[0]);
+const SW = {s: 1.5, m: 2.5, l: 4, xl: 6.5};                              // line widths on screen, px
+const FZ = {s: 13, m: 16, l: 20, xl: 25}, FLINE = {s: 19.5, m: 24, l: 28, xl: 32.5};   // text sizes and their line heights, px
+const nv = (n, k) => (n && n[k] !== undefined ? n[k] : NOTE_DEF[k]);
+const lv = (l, k) => (l && l[k] !== undefined ? l[k] : LINK_DEF[k]);
+const validIn = (opts, v) => opts.some(o => o[0] === v);
+/* new things look like the last ones chosen (C3): a line all of its look, a sticky its shape, look and text
+   settings (its colour goes round as before, and a stamp is set each time) */
+let lastLink = {k: 'line', sh: 'curve'}, lastNote = {};
+const NOTE_CARRY = ['shape', 'look', 'fz', 'al', 'ff'];
+const clip = {note: null, link: null};    // a copied look (C2)
+function setLook(obj, look, defs) {       // only what differs from the default is kept
+  for (const k in look) { if (look[k] === defs[k]) delete obj[k]; else obj[k] = look[k]; }
+}
+function setLinkLook(l, look) {           // a line always says what kind and shape it is
+  setLook(l, look, LINK_DEF);
+  l.k = lv(l, 'k'); l.sh = lv(l, 'sh');
+}
 let boardIdx = new Map();         // map key -> [all ids on that map]
 let linkIdx = new Map();          // note id -> [ids of the links at it]
 let countMemo = new Map();
@@ -814,9 +947,10 @@ function save() {
     if (n.h) o.h = n.h;
     if (n.c) o.c = n.c;
     if (n.s) o.s = 1;
+    lookOut(n, o, NOTE_DEF);
     arr.push(o);
   }
-  const ls = [...links.values()].map(l => ({id: l.id, a: l.a, b: l.b, k: l.k, sh: l.sh}));
+  const ls = [...links.values()].map(linkOut);
   store.set(KEY, JSON.stringify({v: 6, notes: arr, links: ls}));
   if (!persistAsked && navigator.storage && navigator.storage.persist) {
     persistAsked = true;
@@ -824,10 +958,16 @@ function save() {
   }
 }
 function saveSoon() { clearTimeout(saveT); saveT = setTimeout(save, 300); }
+function lookOut(from, o, defs) { for (const k in defs) if (from[k] !== undefined && from[k] !== defs[k]) o[k] = from[k]; return o; }
+function linkOut(l) {
+  const o = lookOut(l, {id: l.id, a: l.a, b: l.b, k: lv(l, 'k'), sh: lv(l, 'sh')}, LINK_DEF);
+  if (l.label) o.label = l.label;
+  return o;
+}
 const views = {};                 // map key -> last view on that map
 function saveView() {
   views[bkey(curBoard)] = {x: view.x, y: view.y, z: view.z, w: innerWidth, h: innerHeight};
-  store.set(VKEY, JSON.stringify({vv: 2, cur: curBoard, views, lk: lastKind}));
+  store.set(VKEY, JSON.stringify({vv: 2, cur: curBoard, views, lk: lastLink, ln: lastNote}));
 }
 function restoreView(b) {
   const v = views[bkey(b)];
@@ -867,6 +1007,7 @@ function sanitize(arr, v, larr) {
       x: num(r.x), y: num(r.y),
       c: COLORS.includes(r.c) ? r.c : null, at: num(r.at) || Date.now(), s: !!r.s
     };
+    for (const k in NOTE_DEF) if (r[k] !== undefined && r[k] !== NOTE_DEF[k] && validIn(NOTE_OPTS[k], r[k])) n[k] = r[k];
     if (v < 6 && r.p) n._p = String(r.p);
     const board = v < 5 && !!r.bo;
     if (v < 3 && !board) {
@@ -900,7 +1041,10 @@ function sanitize(arr, v, larr) {
       const id = String(r.id || '').slice(0, 40), a = String(r.a || ''), b = String(r.b || '');
       if (!id || ids.has(id) || !seen.has(a) || !seen.has(b) || a === b) continue;
       ids.add(id);
-      ls.push({id, a, b, k: KINDS.includes(r.k) ? r.k : 'line', sh: SHAPES.includes(r.sh) ? r.sh : 'curve'});
+      const l = {id, a, b, k: KINDS.includes(r.k) ? r.k : 'line', sh: SHAPES.includes(r.sh) ? r.sh : 'curve'};
+      for (const k of ['w', 'dash', 'head', 'color']) if (r[k] !== undefined && r[k] !== LINK_DEF[k] && validIn(LINK_OPTS[k], r[k])) l[k] = r[k];
+      if (typeof r.label === 'string' && r.label.trim()) l.label = r.label.trim().slice(0, 20);
+      ls.push(l);
     }
   }
   for (const n of out) delete n._p;
@@ -961,15 +1105,14 @@ measurer.innerHTML = '<div class="card"><div class="t"></div><div class="x"></di
 const mCard = measurer.firstChild, mT = measurer.querySelector('.t'), mX = measurer.querySelector('.x');
 function measureNote(n) {
   if (!n) return false;
-  const w = wOf(n), sh = n.sh || H;
-  const key = w + ',' + sh + '\u0001' + (n.ht ? '1' : '0') + '\u0001' + (n.ht ? n.t : '') + '\u0001' + n.b;
+  const w = wOf(n), sh = n.sh || H, sc = styleCls(n);
+  const key = w + ',' + sh + '\u0001' + (n.ht ? '1' : '0') + '\u0001' + sc + '\u0001' + (n.ht ? n.t : '') + '\u0001' + n.b;
   if (n._mk === key && n.h) return false;
   if (!measurer.isConnected) document.body.appendChild(measurer);
   n._mk = key;
   measurer.style.width = w + 'px';
   measurer.style.setProperty('--cl', clampOf(n));
-  measurer.classList.toggle('ht', !!n.ht);
-  measurer.classList.toggle('empty', !n.b.trim() && !(n.ht && n.t.trim()));
+  measurer.className = 'note measure c-' + colorOf(n) + (n.ht ? ' ht' : '') + (!n.b.trim() && !(n.ht && n.t.trim()) ? ' empty' : '') + (sc ? ' ' + sc : '');
   mT.textContent = n.ht ? n.t : '';
   mX.textContent = n.b;
   const h = Math.max(sh, Math.ceil(mCard.offsetHeight));
@@ -982,10 +1125,27 @@ function fmtDate(ts) {
   if (d.toDateString() === now.toDateString()) return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   return (d.getFullYear() !== now.getFullYear() ? d.getFullYear() + '/' : '') + (d.getMonth() + 1) + '/' + d.getDate();
 }
+/* the classes for a sticky's look: only for what differs from the default */
+function styleCls(n) {
+  const out = [];
+  for (const [k, p] of [['shape', 'sh-'], ['look', 'lk-'], ['fz', 'fz-'], ['al', 'al-'], ['ff', 'ff-']]) {
+    const v = nv(n, k);
+    if (v !== NOTE_DEF[k]) out.push(p + v);
+  }
+  return out.join(' ');
+}
 function paintNote(n) {
   if (!onHere(n.id)) return;
   const r = ensureEl(n), cl = r.el.classList, c = colorOf(n);
   if (r.color !== c) { if (r.color) cl.remove('c-' + r.color); cl.add('c-' + c); r.color = c; }
+  const sc = styleCls(n);
+  if (r.sc !== sc) { if (r.sc) cl.remove(...r.sc.split(' ')); if (sc) cl.add(...sc.split(' ')); r.sc = sc; r.ml = 0; r.mlk = ''; }
+  const sv = nv(n, 'stamp');
+  if (r.sv !== sv) {
+    r.sv = sv;
+    if (sv && !r.stp) { r.stp = document.createElement('span'); r.stp.className = 'stp'; r.stp.setAttribute('aria-hidden', 'true'); r.el.append(r.stp); }
+    if (sv) r.stp.textContent = sv; else if (r.stp) { r.stp.remove(); r.stp = null; }
+  }
   const ic = boardCount(n.id);
   cl.toggle('lead', linksOf(n.id).length !== 1 || ic > 0);   // named from far away: not just hanging off one other sticky
   cl.toggle('picked', picked.has(n.id));
@@ -1010,66 +1170,99 @@ function placeNote(n) {
 }
 const r1 = v => Math.round(v * 10) / 10;
 /* Where a line between two stickies runs. Curved: from side to side when they sit next to each other (like a
-   mind map), from top to bottom when one is above the other. Straight: along the line between their centres,
-   from edge to edge. Gives the two ends and the two control points (for a straight line, points on it). */
-function linkGeom(p, c, straight) {
+   mind map), from top to bottom when one is above the other. Right-angled (elbow): the same sides, joined by
+   straight runs with rounded bends. Straight: along the line between their centres, from edge to edge (the
+   edge of the ellipse for a round sticky). Gives the two ends, two points the ends are reached from (for the
+   arrowheads), and the path itself. */
+function linkGeom(p, c, shape) {
   const pw = wOf(p), ph = hOf(p), cw = wOf(c), ch = hOf(c);
   const pcx = p.x + pw / 2, pcy = p.y + ph / 2, ccx = c.x + cw / 2, ccy = c.y + ch / 2;
   const dx = ccx - pcx, dy = ccy - pcy;
-  if (straight) {
-    const edge = (w, h) => Math.min(dx ? w / 2 / Math.abs(dx) : Infinity, dy ? h / 2 / Math.abs(dy) : Infinity);
-    const t1 = Math.min(0.49, edge(pw, ph)), t2 = Math.min(0.49, edge(cw, ch));
+  if (shape === 'straight') {
+    const edge = (n, w, h) => nv(n, 'shape') === 'round' ? 1 / 2 / Math.hypot(dx / w, dy / h)
+      : Math.min(dx ? w / 2 / Math.abs(dx) : Infinity, dy ? h / 2 / Math.abs(dy) : Infinity);
+    const t1 = Math.min(0.49, edge(p, pw, ph)), t2 = Math.min(0.49, edge(c, cw, ch));
     const x1 = pcx + dx * t1, y1 = pcy + dy * t1, x2 = ccx - dx * t2, y2 = ccy - dy * t2;
-    return {x1, y1, x2, y2, c1x: x1 + (x2 - x1) / 3, c1y: y1 + (y2 - y1) / 3, c2x: x2 - (x2 - x1) / 3, c2y: y2 - (y2 - y1) / 3};
+    return {x1, y1, x2, y2, c1x: x1 + (x2 - x1) / 3, c1y: y1 + (y2 - y1) / 3, c2x: x2 - (x2 - x1) / 3, c2y: y2 - (y2 - y1) / 3,
+      d: 'M' + r1(x1) + ' ' + r1(y1) + 'L' + r1(x2) + ' ' + r1(y2)};
   }
   const gx = Math.max(c.x - (p.x + pw), p.x - (c.x + cw));
-  if (gx >= 16 || Math.abs(dx) * (ph + ch) >= Math.abs(dy) * (pw + cw) * 0.9) {
-    const s = dx >= 0 ? 1 : -1;
-    const x1 = pcx + s * pw / 2, y1 = pcy, x2 = ccx - s * cw / 2, y2 = ccy;
-    const k = Math.max(26, Math.abs(x2 - x1) / 2);
-    return {x1, y1, x2, y2, c1x: x1 + s * k, c1y: y1, c2x: x2 - s * k, c2y: y2};
+  const side = gx >= 16 || Math.abs(dx) * (ph + ch) >= Math.abs(dy) * (pw + cw) * 0.9;
+  let x1, y1, x2, y2, s;
+  if (side) { s = dx >= 0 ? 1 : -1; x1 = pcx + s * pw / 2; y1 = pcy; x2 = ccx - s * cw / 2; y2 = ccy; }
+  else { s = dy >= 0 ? 1 : -1; x1 = pcx; y1 = pcy + s * ph / 2; x2 = ccx; y2 = ccy - s * ch / 2; }
+  if (shape === 'elbow') {
+    const P = (x, y) => r1(x) + ' ' + r1(y);
+    if (side) {
+      const mx = (x1 + x2) / 2, sy = y2 >= y1 ? 1 : -1, r = Math.min(14, Math.abs(y2 - y1) / 2, Math.abs(x2 - x1) / 2);
+      const d = r < 1 ? 'M' + P(x1, y1) + 'H' + r1(mx) + 'V' + r1(y2) + 'H' + r1(x2)
+        : 'M' + P(x1, y1) + 'H' + r1(mx - s * r) + 'Q' + P(mx, y1) + ' ' + P(mx, y1 + sy * r) + 'V' + r1(y2 - sy * r) + 'Q' + P(mx, y2) + ' ' + P(mx + s * r, y2) + 'H' + r1(x2);
+      return {x1, y1, x2, y2, c1x: x1 + s * 10, c1y: y1, c2x: x2 - s * 10, c2y: y2, d};
+    }
+    const my = (y1 + y2) / 2, sx = x2 >= x1 ? 1 : -1, r = Math.min(14, Math.abs(x2 - x1) / 2, Math.abs(y2 - y1) / 2);
+    const d = r < 1 ? 'M' + P(x1, y1) + 'V' + r1(my) + 'H' + r1(x2) + 'V' + r1(y2)
+      : 'M' + P(x1, y1) + 'V' + r1(my - s * r) + 'Q' + P(x1, my) + ' ' + P(x1 + sx * r, my) + 'H' + r1(x2 - sx * r) + 'Q' + P(x2, my) + ' ' + P(x2, my + s * r) + 'V' + r1(y2);
+    return {x1, y1, x2, y2, c1x: x1, c1y: y1 + s * 10, c2x: x2, c2y: y2 - s * 10, d};
   }
-  const s = dy >= 0 ? 1 : -1;
-  const x1 = pcx, y1 = pcy + s * ph / 2, x2 = ccx, y2 = ccy - s * ch / 2;
-  const k = Math.max(22, Math.abs(y2 - y1) / 2);
-  return {x1, y1, x2, y2, c1x: x1, c1y: y1 + s * k, c2x: x2, c2y: y2 - s * k};
+  const k = Math.max(side ? 26 : 22, Math.abs(side ? x2 - x1 : y2 - y1) / 2);
+  const c1x = side ? x1 + s * k : x1, c1y = side ? y1 : y1 + s * k, c2x = side ? x2 - s * k : x2, c2y = side ? y2 : y2 - s * k;
+  return {x1, y1, x2, y2, c1x, c1y, c2x, c2y,
+    d: 'M' + r1(x1) + ' ' + r1(y1) + 'C' + r1(c1x) + ' ' + r1(c1y) + ' ' + r1(c2x) + ' ' + r1(c2y) + ' ' + r1(x2) + ' ' + r1(y2)};
 }
-function lineD(G, straight) {
-  return 'M' + r1(G.x1) + ' ' + r1(G.y1) + (straight ? 'L' : 'C' + r1(G.c1x) + ' ' + r1(G.c1y) + ' ' + r1(G.c2x) + ' ' + r1(G.c2y) + ' ') + r1(G.x2) + ' ' + r1(G.y2);
-}
-/* an open arrowhead with its tip at (x, y), pointing away from (fx, fy); as big on screen at any zoom,
-   smaller on a line too short for it (span: the length of the line) */
+/* an arrow end with its tip at (x, y), reached from (fx, fy): open, a filled triangle or a dot. As big on
+   screen at any zoom, growing with the line's width, and smaller on a line too short for it (span). */
 let curIz = 1;
-function headD(x, y, fx, fy, span) {
-  const L = Math.min(12 * curIz, span * 0.3), a = 0.48;
+function headD(kind, x, y, fx, fy, span, sw) {
+  const L = Math.min((9 + sw * 1.8) * curIz, span * 0.3), a = kind === 'tri' ? 0.42 : 0.48;
   let dx = fx - x, dy = fy - y;
   const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+  if (kind === 'dot') {
+    const rr = Math.min((2.6 + sw * 0.9) * curIz, span * 0.12), cx = x + dx * rr, cy = y + dy * rr;
+    return 'M' + r1(cx - rr) + ' ' + r1(cy) + 'a' + r1(rr) + ' ' + r1(rr) + ' 0 1 0 ' + r1(2 * rr) + ' 0a' + r1(rr) + ' ' + r1(rr) + ' 0 1 0 ' + r1(-2 * rr) + ' 0';
+  }
   const ca = Math.cos(a), sa = Math.sin(a);
   return 'M' + r1(x + L * (dx * ca - dy * sa)) + ' ' + r1(y + L * (dx * sa + dy * ca)) + 'L' + r1(x) + ' ' + r1(y) +
-    'L' + r1(x + L * (dx * ca + dy * sa)) + ' ' + r1(y + L * (-dx * sa + dy * ca));
+    'L' + r1(x + L * (dx * ca + dy * sa)) + ' ' + r1(y + L * (-dx * sa + dy * ca)) + (kind === 'tri' ? 'Z' : '');
 }
 function linkPaths(l, A, B) {
-  const straight = l.sh === 'straight', G = linkGeom(A, B, straight), d = lineD(G, straight);
-  const span = Math.hypot(G.x2 - G.x1, G.y2 - G.y1) / (l.k === 'both' ? 2 : 1);
+  const G = linkGeom(A, B, lv(l, 'sh')), k = lv(l, 'k'), head = lv(l, 'head'), sw = SW[lv(l, 'w')];
+  const span = Math.hypot(G.x2 - G.x1, G.y2 - G.y1) / (k === 'both' ? 2 : 1);
   let heads = '';
-  if (l.k !== 'line') heads += headD(G.x2, G.y2, G.c2x, G.c2y, span);      // an arrow points at b
-  if (l.k === 'both') heads += headD(G.x1, G.y1, G.c1x, G.c1y, span);
-  return {line: d, drawn: d + heads};
+  if (k !== 'line') heads += headD(head, G.x2, G.y2, G.c2x, G.c2y, span, sw);      // an arrow points at b
+  if (k === 'both') heads += headD(head, G.x1, G.y1, G.c1x, G.c1y, span, sw);
+  return {line: G.d, heads};
 }
+function dropLinkEl(id) {
+  const r = linkEls.get(id);
+  if (!r) return;
+  r.e.remove(); r.h.remove(); r.f.remove(); if (r.t) r.t.remove();
+  linkEls.delete(id);
+}
+const lblBox = $('#lbls');
 function paintLink(l) {
   let r = linkEls.get(l.id);
   const A = notes.get(l.a), B = notes.get(l.b);
-  if (!A || !B || !onHere(l.a)) { if (r) { r.e.remove(); r.h.remove(); linkEls.delete(l.id); } return; }
+  if (!A || !B || !onHere(l.a)) { dropLinkEl(l.id); return; }
   if (!r) {
-    const h = document.createElementNS(SVGNS, 'path'), e = document.createElementNS(SVGNS, 'path');
-    h.classList.add('lh'); h.dataset.link = l.id; e.classList.add('e');
-    edgesSvg.append(h, e);
-    r = {e, h}; linkEls.set(l.id, r);
+    const h = document.createElementNS(SVGNS, 'path'), e = document.createElementNS(SVGNS, 'path'), f = document.createElementNS(SVGNS, 'path');
+    h.classList.add('lh'); h.dataset.link = l.id;
+    edgesSvg.append(h, e, f);
+    r = {e, h, f}; linkEls.set(l.id, r);
   }
-  const P = linkPaths(l, A, B);
-  r.e.setAttribute('d', P.drawn);
+  const P = linkPaths(l, A, B), w = 'w-' + lv(l, 'w'), c = 'lc-' + lv(l, 'color');
+  r.e.setAttribute('class', 'e ' + w + ' ' + c + ' d-' + lv(l, 'dash'));
+  r.f.setAttribute('class', 'ah ' + w + ' ' + c + (lv(l, 'head') !== 'open' ? ' fill' : ''));
+  r.e.setAttribute('d', P.line);
   r.h.setAttribute('d', P.line);
-  r.e.classList.toggle('sel', l.id === selLink);
+  r.f.setAttribute('d', P.heads || 'M0 0');
+  r.f.style.display = P.heads ? '' : 'none';
+  if (l.label) {                         // its label, in the middle of the line
+    if (!r.t) { r.t = document.createElement('div'); r.t.className = 'llbl'; r.t.dataset.link = l.id; lblBox.append(r.t); }
+    if (r.t.textContent !== l.label) r.t.textContent = l.label;
+    const m = r.h.getPointAtLength(r.h.getTotalLength() / 2);
+    r.t.style.transform = 'translate(' + r1(m.x) + 'px,' + r1(m.y) + 'px) translate(-50%,-50%)';
+    r.t.classList.toggle('sel', l.id === selLink);
+  } else if (r.t) { r.t.remove(); r.t = null; }
 }
 function paintLinksOf(ids) { for (const lid of linksTouching(ids)) paintLink(links.get(lid)); }
 /* the connector layer gets an explicit box around the notes: an unsized SVG that relies on
@@ -1116,7 +1309,7 @@ function renderAll() {
   for (const id of ids) if (id !== inlineId) measureNote(notes.get(id));   // reads first, then writes
   sizeEdges();
   for (const [id, r] of els) if (!set.has(id)) { r.el.remove(); els.delete(id); }
-  for (const [id, r] of linkEls) { const l = links.get(id); if (!l || !onHere(l.a)) { r.e.remove(); r.h.remove(); linkEls.delete(id); } }
+  for (const [id] of linkEls) { const l = links.get(id); if (!l || !onHere(l.a)) dropLinkEl(id); }
   for (const id of ids) { const n = notes.get(id); paintNote(n); placeNote(n); }
   for (const l of linksHere()) paintLink(l);
   applyMidLines();
@@ -1197,26 +1390,29 @@ function midLines(paras, f, cw) {
   }
   return L;
 }
+function midRoom(n) {             // the box the text has at mid zoom: [width, height]
+  const round = nv(n, 'shape') === 'round';
+  return [(wOf(n) - 2 * MID_PX) * (round ? 0.72 : 0.97), (hOf(n) - 2 * MID_PY) * (round ? 0.66 : 1) - (nv(n, 'look') === 'card' ? 8 : 0)];
+}
 function midFont(n, fmax) {
-  const cw = (wOf(n) - 2 * MID_PX) * 0.97, ch = hOf(n) - 2 * MID_PY, paras = midParas(n);
+  const [cw, ch] = midRoom(n), paras = midParas(n), base = FZ[nv(n, 'fz')];
   for (const toks of paras) {                                    // a word of a few characters is not split
     let e = 0;
     for (const t of toks) e += t[0];
     if (e > 0 && e <= 4) fmax = Math.min(fmax, cw / e);
   }
-  let f = Math.max(16, fmax);
-  while (f > 16 && midLines(paras, f, cw) * f * MID_LH > ch) f = Math.max(16, f * 0.96);
+  let f = Math.max(base, fmax);
+  while (f > base && midLines(paras, f, cw) * f * MID_LH > ch) f = Math.max(base, f * 0.96);
   return f;
 }
 function applyMidLines() {
   if (zoomCls !== 'z-mid') return;
-  const fmax = 16 * curLk;
   for (const [id, r] of els) {
     const n = notes.get(id);
     if (!n) continue;
-    const f = midFont(n, fmax), mf = (f / 16).toFixed(3);
-    const ml = Math.max(1, Math.floor((hOf(n) - 2 * MID_PY) / (f * MID_LH) + 0.02));
-    const tl = n.ht && n.t.trim() ? Math.min(ml, midLines([midParas(n)[0]], f, (wOf(n) - 2 * MID_PX) * 0.97)) : 0;
+    const f = midFont(n, FZ[nv(n, 'fz')] * curLk), mf = (f / 16).toFixed(3), [cw, ch] = midRoom(n);
+    const ml = Math.max(1, Math.floor(ch / (f * MID_LH) + 0.02));
+    const tl = n.ht && n.t.trim() ? Math.min(ml, midLines([midParas(n)[0]], f, cw)) : 0;
     const key = ml + ',' + tl;
     if (r.mf !== mf) { r.el.style.setProperty('--mf', mf); r.mf = mf; }
     if (r.mlk !== key) {                 // a titled box: its title lines, then its text
@@ -1616,14 +1812,14 @@ let selId = null, hotLinks = [];
 function select(id) {
   const prev = selId && els.get(selId);
   if (prev) prev.el.classList.remove('sel');
-  for (const lid of hotLinks) { const r = linkEls.get(lid); if (r) r.e.classList.remove('hot'); }
+  for (const lid of hotLinks) { const r = linkEls.get(lid); if (r) r.h.classList.remove('hot'); }
   hotLinks = [];
   selId = id && notes.has(id) && onHere(id) ? id : null;
   if (!selId) { markMini(); return; }
   const r = els.get(selId);
   if (r) r.el.classList.add('sel');
   hotLinks = linksOf(selId).slice();                 // its lines light up too
-  for (const lid of hotLinks) { const e = linkEls.get(lid); if (e) e.e.classList.add('hot'); }
+  for (const lid of hotLinks) { const e = linkEls.get(lid); if (e) e.h.classList.add('hot'); }
   markMini();
 }
 
@@ -1666,6 +1862,7 @@ function updateSelUI() {
   $('#sel-all').disabled = !vis.length;
   $('#sel-cut').disabled = !linksTouching([...picked]).length;
   $('#sel-del').disabled = !picked.size;
+  $('#sel-look').disabled = !picked.size;
 }
 function enterSelect(seed) {
   selectLink(null);
@@ -1746,7 +1943,44 @@ async function deletePicked() {
   haptic();
   toast(ids.length + '件の付箋を削除しました', '元に戻す', () => { putBack(snap); renderAll(); save(); });
 }
+/* the same look for every picked sticky, and for the lines between them (C1); one undo for it all */
+async function stylePicked() {
+  const ids = [...picked];
+  if (!ids.length) return;
+  const lids = [...links.values()].filter(l => picked.has(l.a) && picked.has(l.b)).map(l => l.id);
+  const snap = snapshot(ids), box = document.createElement('div');
+  box.className = 'bulk';
+  let changed = false;
+  const same = vals => (vals.every(v => v === vals[0]) ? vals[0] : undefined);
+  const head = t => { const e = document.createElement('h4'); e.textContent = t; return e; };
+  const button = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = t; b.addEventListener('click', fn); return b; };
+  const render = () => {
+    const ns = ids.map(i => notes.get(i)).filter(Boolean), ls = lids.map(i => links.get(i)).filter(Boolean), parts = [];
+    const toNotes = look => { for (const n of ns) applyNoteLook(n, look); if (NOTE_CARRY.some(k => k in look)) rememberNote(ns[0]); changed = true; renderAll(); save(); render(); };
+    const toLines = look => { for (const l of ls) { setLinkLook(l, look); paintLink(l); } lastLink = linkLookOf(ls[0]); changed = true; markMini(); save(); saveView(); render(); };
+    parts.push(head('付箋 ' + ns.length + '件'));
+    const rows = document.createElement('div');
+    rows.className = 'srows';
+    rows.append(choiceRow('色', COLORS.map(c => [c, CNAME[c]]), same(ns.map(colorOf)), v => toNotes({c: v}), 'c-'));
+    for (const k in NOTE_DEF) rows.append(choiceRow(NOTE_NAMES[k], NOTE_OPTS[k], same(ns.map(n => nv(n, k))), v => toNotes({[k]: v})));
+    parts.push(rows);
+    if (clip.note) { const a = document.createElement('div'); a.className = 'acts'; a.append(button('コピーした付箋の見た目を貼り付け', () => toNotes(clip.note))); parts.push(a); }
+    if (ls.length) {
+      parts.push(head('その間の線 ' + ls.length + '本'));
+      const lrows = document.createElement('div');
+      lrows.className = 'srows';
+      for (const k in LINK_DEF) lrows.append(choiceRow(LINK_NAMES[k], LINK_OPTS[k], same(ls.map(l => lv(l, k))), v => toLines({[k]: v}), k === 'color' ? 'lc lc-' : null));
+      parts.push(lrows);
+      if (clip.link) { const a = document.createElement('div'); a.className = 'acts'; a.append(button('コピーした線の見た目を貼り付け', () => toLines(clip.link))); parts.push(a); }
+    }
+    box.replaceChildren(...parts);
+  };
+  render();
+  await ask('選んだ付箋の見た目', box, [{label: '閉じる', k: 'close', cls: 'primary'}]);
+  if (changed) toast('見た目を変えました', '元に戻す', () => { putBack(snap); renderAll(); save(); });
+}
 $('#btn-select').addEventListener('click', () => enterSelect());
+$('#sel-look').addEventListener('click', stylePicked);
 $('#sel-all').addEventListener('click', pickAll);
 $('#sel-cut').addEventListener('click', unlinkPicked);
 $('#sel-del').addEventListener('click', deletePicked);
@@ -1787,6 +2021,7 @@ function freeSpotNear(x, y, w, h) {
 function createNote(x, y) {
   const n = {id: uid(), bd: curBoard, t: '', b: '', w: W, sh: H, x: Math.round(x), y: Math.round(y),
     c: NEW_CYCLE[idsOn(curBoard).length % NEW_CYCLE.length], at: Date.now()};
+  setLook(n, Object.assign({}, lastNote), NOTE_DEF);      // the shape, look and text settings chosen last
   notes.set(n.id, n);
   fresh.add(n.id);
   renderAll();
@@ -1802,7 +2037,8 @@ function createNote(x, y) {
 function addLink(a, b) {
   const had = linkBetween(a, b);
   if (had) return had;
-  const l = {id: 'l' + uid(), a, b, k: lastKind.k, sh: lastKind.sh};
+  const l = {id: 'l' + uid(), a, b};
+  setLinkLook(l, Object.assign({}, LINK_DEF, lastLink));
   links.set(l.id, l);
   reindex();
   paintLink(l);
@@ -1922,7 +2158,12 @@ function snapshot(ids) {
   return snap;
 }
 function putBack(snap) {
-  for (const s of snap) { if (notes.has(s.id)) Object.assign(notes.get(s.id), s); else notes.set(s.id, Object.assign({}, s)); }
+  for (const s of snap) {
+    const n = notes.get(s.id);
+    if (!n) { notes.set(s.id, Object.assign({}, s)); continue; }
+    for (const k of Object.keys(n)) if (!(k in s)) delete n[k];        // what was added since goes again
+    Object.assign(n, s);
+  }
   for (const l of snap.links || []) links.set(l.id, Object.assign({}, l));
 }
 function restoreSnap(snap, keepBoard) {
@@ -2016,31 +2257,55 @@ async function deleteNote(id) {
    the two, or over empty space for a new sticky joined to it. */
 let selLink = null, tmpLine = null;
 const linkbar = $('#linkbar');
+const svgI = body => '<svg viewBox="0 0 28 22" aria-hidden="true">' + body + '</svg>';
+/* the panel's buttons, from LINK_OPTS: kind (and 逆向き), shape (and 削除), width; then behind 「もっと」 the
+   dash, arrow ends and colour */
+for (const row of linkbar.querySelectorAll('[data-row]')) {
+  const key = row.dataset.row;
+  for (const [v, name, icon] of LINK_OPTS[key]) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.key = key; b.dataset.v = v; b.setAttribute('aria-pressed', 'false');
+    if (key === 'color') { b.className = 'swb lc lc-' + v; b.setAttribute('aria-label', '線の色：' + name); }
+    else { b.className = 'lbo'; b.innerHTML = svgI(icon) + name; }
+    row.append(b);
+  }
+  if (key === 'k') row.insertAdjacentHTML('beforeend', '<button id="lb-flip" class="lbo" type="button" aria-label="矢印の向きを逆にする">' + svgI('<path d="M5 8h17l-4-4M23 15H6l4 4"/>') + '逆向き</button>');
+  if (key === 'sh') row.insertAdjacentHTML('beforeend', '<button id="lb-del" class="lbo" type="button" aria-label="この線を消す">' + svgI('<path d="M7 7h14M12 10.5v6M16 10.5v6M8.5 7l1 11h9l1-11M11.5 7V4.5h5V7"/>') + '削除</button>');
+  if (key === 'w' || key === 'dash' || key === 'head') row.insertAdjacentHTML('beforeend', '<span class="lbo" aria-hidden="true"></span>');   // keeps the columns
+}
+const lbExtra = $('#lb-extra'), lbMore = $('#lb-more'), lbLabel = $('#lb-label');
 function selectLink(id) {
   id = id && links.has(id) ? id : null;
   if (id) { if (inlineId) endInline(); if (editing) closeEditor(); select(null); }
   const prev = selLink && linkEls.get(selLink);
-  if (prev) prev.e.classList.remove('sel');
+  if (prev) { prev.h.classList.remove('sel'); if (prev.t) prev.t.classList.remove('sel'); }
+  if (!id && document.activeElement === lbLabel) lbLabel.blur();
   selLink = id && links.has(id) ? id : null;          // (ending the writing may have thrown that sticky away)
   linkbar.hidden = !selLink;
   html.classList.toggle('link-editing', !!selLink);
   if (!selLink) return;
   const r = linkEls.get(selLink);
-  if (r) { r.e.classList.add('sel'); edgesSvg.append(r.h, r.e); }      // on top of the other lines
+  if (r) {
+    r.h.classList.add('sel'); if (r.t) r.t.classList.add('sel');
+    edgesSvg.append(r.h, r.e, r.f);                    // on top of the other lines
+  }
   syncLinkbar();
 }
 function syncLinkbar() {
   const l = links.get(selLink);
   if (!l) return;
-  for (const b of linkbar.querySelectorAll('[data-k]')) b.setAttribute('aria-pressed', String(b.dataset.k === l.k));
-  for (const b of linkbar.querySelectorAll('[data-s]')) b.setAttribute('aria-pressed', String(b.dataset.s === l.sh));
-  $('#lb-flip').disabled = l.k !== 'arrow';
+  for (const b of linkbar.querySelectorAll('[data-key]')) b.setAttribute('aria-pressed', String(lv(l, b.dataset.key) === b.dataset.v));
+  $('#lb-flip').disabled = lv(l, 'k') !== 'arrow';
+  for (const b of linkbar.querySelectorAll('[data-key="head"]')) b.disabled = lv(l, 'k') === 'line';
+  if (document.activeElement !== lbLabel) lbLabel.value = l.label || '';
+  $('#lb-paste').disabled = !clip.link;
 }
+const linkLookOf = l => { const o = {}; for (const k in LINK_DEF) o[k] = lv(l, k); return o; };
 function changeLink(fn) {
   const l = links.get(selLink);
   if (!l) return;
   fn(l);
-  lastKind = {k: l.k, sh: l.sh};                       // the next new line looks like this one
+  lastLink = linkLookOf(l);                            // the next new line looks like this one
   paintLink(l); markMini(); save(); saveView(); syncLinkbar();
 }
 function deleteLink(id) {
@@ -2055,11 +2320,34 @@ function deleteLink(id) {
 linkbar.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b || b.disabled) return;
-  if (b.dataset.k) changeLink(l => { l.k = b.dataset.k; });
-  else if (b.dataset.s) changeLink(l => { l.sh = b.dataset.s; });
+  if (b.dataset.key) changeLink(l => setLinkLook(l, {[b.dataset.key]: b.dataset.v}));
   else if (b.id === 'lb-flip') changeLink(l => { const a = l.a; l.a = l.b; l.b = a; });
   else if (b.id === 'lb-del') deleteLink(selLink);
+  else if (b.id === 'lb-more') {
+    const open = lbExtra.hidden;
+    lbExtra.hidden = !open;
+    lbMore.setAttribute('aria-expanded', String(open));
+  } else if (b.id === 'lb-copy') {
+    const l = links.get(selLink);
+    if (l) { clip.link = linkLookOf(l); syncLinkbar(); toast('線の見た目をコピーしました。ほかの線を選んで「貼り付け」'); }
+  } else if (b.id === 'lb-paste' && clip.link) {
+    const l = links.get(selLink), keep = l && Object.assign({}, l);
+    if (!l) return;
+    changeLink(x => setLinkLook(x, clip.link));
+    toast('線の見た目を貼り付けました', '元に戻す', () => {             // the line exactly as it was
+      if (!links.has(keep.id)) return;
+      links.set(keep.id, keep); paintLink(keep); save(); if (selLink === keep.id) syncLinkbar();
+    });
+  }
 });
+lbLabel.addEventListener('input', () => {
+  const l = links.get(selLink);
+  if (!l) return;
+  const v = lbLabel.value.trim().slice(0, 20);
+  if (v) l.label = v; else delete l.label;
+  paintLink(l); saveSoon();
+});
+lbLabel.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) lbLabel.blur(); });
 const cnKnob = document.createElement('div');
 cnKnob.className = 'cn';
 cnKnob.setAttribute('aria-hidden', 'true');
@@ -2085,7 +2373,8 @@ function moveLinkDrag(cx, cy) {
     if (to) { const r = els.get(to); if (r) r.el.classList.add('link-to'); haptic(); }
   }
   const w = toWorld(cx, cy), end = notes.get(to) || {x: w.x - 1, y: w.y - 1, w: 2, h: 2};   // to the sticky under the finger, or the finger
-  tmpLine.setAttribute('d', linkPaths(lastKind, n, end).drawn);
+  const P = linkPaths(lastLink, n, end);
+  tmpLine.setAttribute('d', P.line + P.heads);
 }
 function endLinkDrag(t, cancelled, cx, cy) {
   const r = els.get(t.id);
@@ -2179,7 +2468,7 @@ map.addEventListener('pointerdown', e => {
   if (inlineId && e.target.closest('.rz')) { startResize(e); return; }   // the knob on the sticky being written
   if (inlineId && e.target.closest('.cn')) { startLinkDrag(e); return; } // its handle: pull out a line
   const inBtn = selMode ? null : e.target.closest('.inb');      // while selecting, the badge is just part of the sticky
-  const lh = !noteEl && !selMode ? e.target.closest('.lh') : null;   // a line: tapped, it is picked; dragged, the map moves
+  const lh = !noteEl && !selMode ? e.target.closest('.lh,.llbl') : null;   // a line (or its label): tapped, it is picked; dragged, the map moves
   g = {type: 'press', pid: e.pointerId, id: noteEl ? noteEl.dataset.id : null, inb: !!inBtn, link: lh ? lh.dataset.link : null,
        shift: e.shiftKey, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY};
   if (noteEl && !inBtn) noteEl.classList.add('pressing');
@@ -2440,6 +2729,48 @@ const REL = {
   in: ['<path d="M21 9H4M9 4.5 4 9l5 4.5"/>', t => '「' + t + '」からの矢印'],
   both: ['<path d="M4 9h16M15 4.5 20 9l-5 4.5M9 4.5 4 9l5 4.5"/>', t => '「' + t + '」と両矢印']
 };
+/* one row of choices for one setting; cur is the value all its targets share (none pressed when they differ);
+   swatch: a class prefix to show the choices as colour dots */
+function choiceRow(name, opts, cur, pick, swatch) {
+  const row = document.createElement('div'), label = document.createElement('span'), box = document.createElement('div');
+  row.className = 'srow'; label.textContent = name; box.className = 'opts';
+  for (const [v, text, icon] of opts) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-pressed', String(cur === v));
+    if (swatch) { b.className = 'swb ' + swatch + v; b.setAttribute('aria-label', name + '：' + text); }
+    else { b.className = 'chip'; if (icon) b.innerHTML = '<svg viewBox="0 0 28 22" aria-hidden="true">' + icon + '</svg>'; b.append(text); }
+    b.addEventListener('click', () => pick(v));
+    box.append(b);
+  }
+  row.append(label, box);
+  return row;
+}
+const noteLookOf = n => { const o = {c: colorOf(n)}; for (const k in NOTE_DEF) o[k] = nv(n, k); return o; };
+function applyNoteLook(n, look) {        // a colour (c) and/or any NOTE_DEF settings
+  const rest = Object.assign({}, look);
+  if (rest.c) n.c = rest.c;
+  delete rest.c;
+  setLook(n, rest, NOTE_DEF);
+  n._mk = null;
+}
+function rememberNote(n) {              // new stickies will look like this one (C3)
+  lastNote = {};
+  for (const k of NOTE_CARRY) if (nv(n, k) !== NOTE_DEF[k]) lastNote[k] = nv(n, k);
+  saveView();
+}
+function fillLook(n) {
+  $('#note-look').replaceChildren(...Object.keys(NOTE_DEF).map(k => choiceRow(NOTE_NAMES[k], NOTE_OPTS[k], nv(n, k), v => {
+    const m = notes.get(editing);
+    if (!m) return;
+    applyNoteLook(m, {[k]: v});
+    m.at = Date.now();
+    if (k !== 'stamp') rememberNote(m);
+    renderAll(); save(); fillLook(m);
+  })));
+  $('#nl-paste').disabled = !clip.note;
+  $('#nl-reset').disabled = Object.keys(NOTE_DEF).every(k => nv(n, k) === NOTE_DEF[k]);
+}
 function fillEditorMeta(n) {
   crumbs.replaceChildren();
   const where = document.createElement('span');
@@ -2457,7 +2788,7 @@ function fillEditorMeta(n) {
   $('#links-label').textContent = ls.length ? 'つながり ' + ls.length : 'つながり';
   linksList.replaceChildren(...ls.map(l => {
     const o = notes.get(otherEnd(l, n.id)), li = document.createElement('li'), b = document.createElement('button');
-    const rel = REL[l.k === 'both' ? 'both' : l.k === 'arrow' ? (l.a === n.id ? 'out' : 'in') : 'line'];
+    const k = lv(l, 'k'), rel = REL[k === 'both' ? 'both' : k === 'arrow' ? (l.a === n.id ? 'out' : 'in') : 'line'];
     b.type = 'button'; b.dataset.go = o.id;
     b.setAttribute('aria-label', rel[1](titleOf(o)));
     b.insertAdjacentHTML('beforeend', '<svg class="rel" viewBox="0 0 24 18" aria-hidden="true">' + rel[0] + '</svg>');
@@ -2488,6 +2819,7 @@ function fillEditorMeta(n) {
     b.className = 'c-' + c; b.setAttribute('aria-label', CNAME[c]);
     swatches.append(b);
   }
+  fillLook(n);
 }
 function openEditor(id, focus) {
   const n = notes.get(id);
@@ -2615,6 +2947,24 @@ swatches.addEventListener('click', e => {
   renderAll(); save(); fillEditorMeta(n);
 });
 $('#del').addEventListener('click', () => { if (editing) deleteNote(editing); });
+$('#nl-copy').addEventListener('click', () => {
+  const n = notes.get(editing);
+  if (!n) return;
+  clip.note = noteLookOf(n);
+  fillLook(n);
+  toast('付箋の見た目をコピーしました。ほかの付箋の詳細で「貼り付け」');
+});
+/* paste (C2) or back to the usual look; both can be undone */
+function relook(n, look, msg) {
+  const keep = noteLookOf(n);
+  applyNoteLook(n, look);
+  n.at = Date.now();
+  rememberNote(n);
+  renderAll(); save(); fillEditorMeta(n);
+  toast(msg, '元に戻す', () => { applyNoteLook(n, keep); rememberNote(n); renderAll(); save(); if (editing === n.id) fillEditorMeta(n); });
+}
+$('#nl-paste').addEventListener('click', () => { const n = notes.get(editing); if (n && clip.note) relook(n, clip.note, '見た目を貼り付けました'); });
+$('#nl-reset').addEventListener('click', () => { const n = notes.get(editing); if (n) relook(n, NOTE_DEF, '元の見た目に戻しました'); });
 $('#b-open').addEventListener('click', () => { if (editing) openInside(editing); });
 $('#b-move').addEventListener('click', () => { if (editing) pickBoard(editing); });
 
@@ -3104,10 +3454,10 @@ function stamp() {
 }
 function exportJSON() {
   return JSON.stringify({app: 'fusen-map', v: 6, exportedAt: new Date().toISOString(),
-    notes: [...notes.values()].map(n => ({id: n.id, bd: n.bd || null, ht: !!n.ht, t: n.t, b: n.b,
+    notes: [...notes.values()].map(n => lookOut(n, {id: n.id, bd: n.bd || null, ht: !!n.ht, t: n.t, b: n.b,
       w: Math.round(n.w || W), sh: Math.round(n.sh || H), h: n.h || 0,
-      x: Math.round(n.x), y: Math.round(n.y), c: n.c || null, at: n.at})),
-    links: [...links.values()].map(l => ({id: l.id, a: l.a, b: l.b, k: l.k, sh: l.sh}))});
+      x: Math.round(n.x), y: Math.round(n.y), c: n.c || null, at: n.at}, NOTE_DEF)),
+    links: [...links.values()].map(linkOut)});
 }
 function copyFallback(json) {
   const ta = document.createElement('textarea');
@@ -3244,7 +3594,10 @@ $('#m-help').addEventListener('click', () => {
     '付箋をタップ → その場で書き直せる（下のバーの「完了」で終わる）',
     '書いている間、付箋の右下の丸を引っぱる → 大きさを自由に変えられる（正方形の所で止まりやすい）',
     '書いている間、付箋の右の ● を引っぱってほかの付箋の上で離す → 線でつながる。何もない所で離すと、つながった新しい付箋ができる',
-    '線をタップ → 線・矢印・両矢印、矢印の向き、曲線・直線を変えたり、線を消したりできる',
+    '線をタップ → 線・矢印・両矢印、矢印の向き、曲線・直線・カギ線、太さを変えたり、線を消したりできる',
+    '線のパネルの「色・線の種類・先の形・ラベル」→ 線の色、実線・破線・点線、矢印の先（ひらいた・三角・丸）、線の真ん中に出す短い文字。「見た目をコピー」「貼り付け」でほかの線にも同じ見た目を付けられる',
+    '付箋をダブルタップ → 詳細の「見た目」で形（四角・角丸・まる・角折れ）、見た目（付箋・カード・ふち・こい色）、文字の大きさ・位置・書体、スタンプを変えられる。「コピー」「貼り付け」でほかの付箋にも同じ見た目を付けられる',
+    '新しく作る付箋は最後に選んだ形・見た目・文字の設定に、新しく引く線は最後に選んだ見た目になる',
     '付箋をダブルタップ → 詳細（色・つながり・中の付箋など）。「＋ つないで追加」で、線でつながった付箋を作れる',
     '付箋をドラッグ → 移動（線は付いてくる）。ほかの付箋の上で離すと、その付箋と線でつながる',
     '付箋を長押し → その付箋の中に入る（中にも付箋を置ける。上のバーで外に戻る）',
@@ -3254,7 +3607,7 @@ $('#m-help').addEventListener('click', () => {
     '付箋をドラッグすると、ほかの付箋の左下に ▣ が出る。その上で離すと、その付箋の中に入る（線は外れる）。中では、上のバーへドラッグすると外に出せる',
     'ピンチで拡大・縮小。引いても文字は付箋に収まる大きさで全文が見え、さらに引くと主な付箋の名前だけになる',
     '右下の小さな地図をタップ → その場所へジャンプ',
-    '下の「選択」→ 付箋をタップするか、空いた所をなぞって囲むと、まとめて移動・線を外す・削除ができる（地図は2本指で動かす。パソコンはShift+クリックでも選べる）',
+    '下の「選択」→ 付箋をタップするか、空いた所をなぞって囲むと、まとめて移動・見た目の変更・線を外す・削除ができる。「見た目」では選んだ付箋とその間の線に同じ見た目を付けられる（地図は2本指で動かす。パソコンはShift+クリックでも選べる）',
     'パソコンでは、線を選んで Delete キーで消せる',
     '空のまま閉じた付箋は自動で消える'
   ].forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.append(li); });
@@ -3283,7 +3636,7 @@ function seed() {
     '付箋を長押しすると、その付箋の中に入れます。中にも付箋を置けます',
     'ドラッグで移動。ほかの付箋の上で離すと線でつながります',
     'ピンチで拡大・縮小。引くと全体を見渡せます',
-    '下の「一覧」から一覧と検索',
+    '詳細の「見た目」で付箋の形や文字、線のパネルで太さや色を変えられます',
     '下の「選択」で、まとめて移動・線を外す・削除ができます'
   ].map(tip);
   const pink = {c: 'pink'};
@@ -3317,6 +3670,15 @@ function seed() {
   lay(c, [[blog, [[m1, [], 'arrow', 'straight'], [m2, [], 'arrow', 'straight']], 'arrow'], [want, [], 'line']], ra.x1 + 150, 0);
   notes.get(m2).y += 70;                         // room for the two-way arrow between them
   join(m1, m2, 'both');                          // the three kinds: line, arrow, two-way arrow
+  /* a few of the looks, so they can be seen straight away */
+  Object.assign(notes.get(a), {shape: 'round', fz: 'l'});
+  Object.assign(notes.get(c), {look: 'bold', stamp: '💡'});
+  Object.assign(notes.get(trip), {shape: 'rounded', stamp: '⭐'});
+  for (const l of links.values()) {
+    if (l.a === c && l.b === blog) Object.assign(l, {w: 'l', head: 'tri', color: 'pink'});
+    if (l.a === m1 && l.b === m2) l.label = '関係あり';
+    if (l.a === c && l.b === want) Object.assign(l, {dash: 'dashed', label: 'いつか'});
+  }
   const rc = box([c, blog, want, m1, m2]);
   put(trip, ra.x1 + 150, rc.y1 + 110);
   lay(k, [[d1, [[d1a, [], 'line'], [d1b, [], 'line']], 'arrow'], [d2, [[d2a, [], 'line'], [d2b, [], 'line']], 'arrow'], [bag, [], 'line']], 0, 0);
@@ -3339,7 +3701,8 @@ function boot() {
   else seed();
   let v = null;
   try { v = JSON.parse(store.get(VKEY) || 'null'); } catch (e) {}
-  if (v && v.lk && KINDS.includes(v.lk.k) && SHAPES.includes(v.lk.sh)) lastKind = {k: v.lk.k, sh: v.lk.sh};
+  if (v && v.lk && typeof v.lk === 'object') for (const k in LINK_DEF) if (validIn(LINK_OPTS[k], v.lk[k])) lastLink[k] = v.lk[k];
+  if (v && v.ln && typeof v.ln === 'object') for (const k of NOTE_CARRY) if (validIn(NOTE_OPTS[k], v.ln[k])) lastNote[k] = v.ln[k];
   if (arr && v && v.views) {
     if (v.vv >= 2) Object.assign(views, v.views);        // views saved before vv 2 were mostly the far-out overview: open readable once
     if (v.cur && notes.has(v.cur)) curBoard = v.cur;
