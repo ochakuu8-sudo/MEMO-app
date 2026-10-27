@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+      <circle cx="16" cy="16" r="2.4" fill="#C6CBD3"/>
+    </pattern>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#282000" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#ECEEF1"/>
+  <rect width="512" height="512" rx="112" fill="url(#dots)"/>
+  <g fill="none" stroke-width="10" stroke-linecap="round" stroke-opacity=".55">
+    <path d="M262 214C302 214 286 150 326 150" stroke="#876600"/>
+    <path d="M262 298C302 298 286 362 326 362" stroke="#876600"/>
+  </g>
+  <g filter="url(#sh)">
+    <rect x="82" y="166" width="180" height="180" rx="12" fill="#FFE27A"/>
+    <rect x="326" y="96" width="108" height="108" rx="10" fill="#FFC7D4"/>
+    <rect x="326" y="308" width="108" height="108" rx="10" fill="#BFEACF"/>
+  </g>
+  <path d="M94 166h156a12 12 0 0 1 12 12v4H82v-4a12 12 0 0 1 12-12z" fill="#876600" fill-opacity=".16"/>
+  <path d="M336 96h88a10 10 0 0 1 10 10v4H326v-4a10 10 0 0 1 10-10z" fill="#AE3858" fill-opacity=".16"/>
+  <path d="M336 308h88a10 10 0 0 1 10 10v4H326v-4a10 10 0 0 1 10-10z" fill="#21774A" fill-opacity=".16"/>
+  <g fill="#2A2620" fill-opacity=".5">
+    <rect x="106" y="210" width="132" height="14" rx="7"/>
+    <rect x="106" y="242" width="112" height="14" rx="7"/>
+    <rect x="106" y="274" width="84" height="14" rx="7"/>
+    <rect x="346" y="134" width="68" height="11" rx="5.5" fill-opacity=".4"/>
+    <rect x="346" y="158" width="46" height="11" rx="5.5" fill-opacity=".4"/>
+    <rect x="346" y="346" width="68" height="11" rx="5.5" fill-opacity=".4"/>
+    <rect x="346" y="370" width="46" height="11" rx="5.5" fill-opacity=".4"/>
+  </g>
+  <circle cx="172" cy="166" r="17" fill="#876600"/>
+  <circle cx="166" cy="160" r="5.5" fill="#fff" fill-opacity=".55"/>
+</svg>
