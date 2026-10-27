@@ -36,6 +36,7 @@
   --font-note:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","Zen Maru Gothic","BIZ UDPGothic",var(--font-ui);
   --font-num:ui-rounded,"SF Pro Rounded",var(--font-ui);
   --kb:0px;
+  --check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6.5 12.5 3.6 3.6 7.4-8' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -52,6 +53,7 @@
     --lilac:#2D2748;  --lilac-ink:#BAA9FF;
     --peach:#45291A;  --peach-ink:#FFB27B;
     --stone:#2D2D2A;  --stone-ink:#C6C3B8;
+    --check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6.5 12.5 3.6 3.6 7.4-8' fill='none' stroke='%230E1222' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     color-scheme:dark;
   }
 }
@@ -69,6 +71,7 @@
   --lilac:#2D2748;  --lilac-ink:#BAA9FF;
   --peach:#45291A;  --peach-ink:#FFB27B;
   --stone:#2D2D2A;  --stone-ink:#C6C3B8;
+  --check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6.5 12.5 3.6 3.6 7.4-8' fill='none' stroke='%230E1222' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   color-scheme:dark;
 }
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
@@ -487,6 +490,45 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .mbtns button.danger{background:transparent;color:var(--danger);font-weight:600}
 #hap{position:fixed;left:-200px;top:0;opacity:0;pointer-events:none}
 
+/* ---------- selecting several stickies ---------- */
+#world.selecting .note::after{
+  content:"";position:absolute;z-index:4;top:min(calc(7px * var(--iz)),8%);right:min(calc(7px * var(--iz)),8%);
+  width:min(calc(24px * var(--iz)),30%);aspect-ratio:1;box-sizing:border-box;border-radius:50%;pointer-events:none;
+  background:color-mix(in srgb,var(--surface) 75%,transparent);
+  box-shadow:inset 0 0 0 calc(2px * var(--iz)) color-mix(in srgb,var(--ink,var(--muted)) 60%,transparent);
+}
+#world.selecting .note.picked::after{
+  background:var(--check) center/70% no-repeat,var(--accent);
+  box-shadow:0 0 0 calc(2px * var(--iz)) var(--surface);
+}
+#world.selecting .note.picked .card{outline:calc(2.5px * var(--iz)) solid var(--accent);outline-offset:calc(3px * var(--iz))}
+#world.selecting .note.board .bc{visibility:hidden}
+#marquee{position:fixed;left:0;top:0;z-index:9;pointer-events:none;box-sizing:border-box;border:1.5px solid var(--accent);border-radius:4px;background:var(--accent-soft)}
+:root.selecting #place,:root.selecting #boardbar{display:none!important}
+#selhead{
+  position:fixed;z-index:11;left:0;right:0;margin:0 auto;width:max-content;box-sizing:border-box;
+  max-width:calc(100% - 32px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px));
+  top:calc(env(safe-area-inset-top,0px) + 10px);height:34px;display:flex;align-items:center;gap:6px;padding:0 14px 0 9px;border-radius:999px;
+  font-size:13px;color:var(--muted);white-space:nowrap;
+}
+#selhead svg{width:17px;height:17px;color:var(--accent)}
+#selhead span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+#selhead b{color:var(--fg);font-weight:700;font-variant-numeric:tabular-nums}
+#selbar{
+  position:fixed;z-index:10;left:50%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  display:flex;align-items:center;gap:2px;padding:5px;border-radius:20px;
+}
+#selbar button{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  width:62px;height:50px;border:0;border-radius:15px;background:transparent;cursor:pointer;
+  font-size:10.5px;letter-spacing:.04em;color:var(--fg);
+}
+#selbar button:active:not(:disabled){background:var(--surface-2)}
+#selbar button:disabled{opacity:.36;cursor:default}
+#selbar #sel-del:not(:disabled){color:var(--danger)}
+#selbar #sel-done{margin-left:3px;background:var(--accent);color:var(--accent-fg);font-weight:700;box-shadow:0 4px 12px -4px var(--accent)}
+#selbar #sel-done:active{background:var(--accent)}
+
 @media (max-width:759px){
   :root.editing #dock,:root.editing #minimap{display:none}
 }
@@ -537,8 +579,18 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
     <button id="btn-tree" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M5 4.5v13.5M5 7h3.5M5 13h3.5M5 18h3.5"/><rect x="10.5" y="4.5" width="9" height="5" rx="1.4"/><rect x="10.5" y="10.5" width="9" height="5" rx="1.4"/><path d="M10.5 18h9"/></svg>一覧</button>
     <button id="btn-fit" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><rect x="8.5" y="8.5" width="7" height="7" rx="1.5"/></svg>全体</button>
     <button id="btn-add" type="button" aria-label="付箋を追加"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button id="btn-select" type="button"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.4 12.3 2.5 2.5 4.8-5.1"/></svg>選択</button>
     <button id="btn-menu" type="button"><svg class="i" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></svg>その他</button>
   </nav>
+
+  <div id="selhead" class="glass" hidden role="status"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.4 12.3 2.5 2.5 4.8-5.1"/></svg><span id="selhead-txt"></span></div>
+  <nav id="selbar" class="glass" hidden aria-label="選んだ付箋の操作">
+    <button id="sel-all" type="button"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></svg><span id="sel-all-txt">すべて</span></button>
+    <button id="sel-cut" type="button" aria-label="選んだ付箋を親から切り離す"><svg class="i" viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.6"/><circle cx="6.5" cy="17" r="2.6"/><path d="M8.7 8.4 19.5 16.8M8.7 15.6 19.5 7.2"/></svg>切り離す</button>
+    <button id="sel-del" type="button" aria-label="選んだ付箋を削除"><svg class="i" viewBox="0 0 24 24"><path d="M5 7h14M10 11v6M14 11v6M6.5 7l1 12h9l1-12M9.5 7V4.5h5V7"/></svg>削除</button>
+    <button id="sel-done" type="button" aria-label="選択を終える"><svg class="i" viewBox="0 0 24 24"><path d="m5.5 12.5 4.2 4.2 8.8-9.4"/></svg>完了</button>
+  </nav>
+  <div id="marquee" hidden></div>
 
   <section id="sheet" hidden aria-label="付箋を編集">
     <div class="grab"></div>
@@ -571,7 +623,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
       <div class="sec">
         <div class="acts">
           <button id="tidy" class="chip" type="button">子メモを整列</button>
-          <button id="detach" class="chip" type="button">一番上の階層へ</button>
+          <button id="detach" class="chip" type="button">親から切り離す</button>
           <button id="del" class="chip danger" type="button">削除</button>
         </div>
       </div>
@@ -580,6 +632,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 
   <div id="itb" hidden role="toolbar" aria-label="書き込み中の付箋">
     <button id="itb-detail" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></svg>詳細</button>
+    <button id="itb-cut" type="button" hidden><svg class="i" viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.6"/><circle cx="6.5" cy="17" r="2.6"/><path d="M8.7 8.4 19.5 16.8M8.7 15.6 19.5 7.2"/></svg>切り離す</button>
     <span class="sp"></span>
     <button id="itb-done" type="button">完了</button>
   </div>
@@ -918,6 +971,7 @@ function paintNote(n) {
   if (r.color !== m.c) { if (r.color) cl.remove('c-' + r.color); cl.add('c-' + m.c); r.color = m.c; }
   const nk = kidsOf(n.id).length;
   cl.toggle('root', !n.p);
+  cl.toggle('picked', picked.has(n.id));
   cl.toggle('folded', !!n.k && nk > 0);
   const d = String(Math.min(m.d, 2));
   if (r.el.dataset.d !== d) r.el.dataset.d = d;
@@ -1059,6 +1113,8 @@ function renderAll() {
   updateBoardBar();
   if (selId) select(selId);
   if (searchOn) markMatches();
+  if (selMode) { prunePicks(); updateSelUI(); }
+  if (inlineId) syncItb();
 }
 function ping(id) {
   const r = els.get(id);
@@ -1364,7 +1420,7 @@ function paintMiniBuffer(mm, dpr, cw, ch) {
     c.fillStyle = n.bo ? palette.surface : col[0];
     c.fillRect(x, y, nw, nh);
     if (n.bo) { c.strokeStyle = col[1]; c.lineWidth = 1.2; c.strokeRect(x + 0.6, y + 0.6, nw - 1.2, nh - 1.2); }
-    if (n.id === selId || (searchOn && matchSet.has(n.id))) {
+    if (n.id === selId || picked.has(n.id) || (searchOn && matchSet.has(n.id))) {
       c.strokeStyle = palette.accent; c.lineWidth = 1.5;
       c.strokeRect(x - 1, y - 1, nw + 2, nh + 2);
     } else if (!n.p && !n.bo) {
@@ -1569,6 +1625,137 @@ function select(id) {
   }
   markMini();
 }
+
+/* ---------- selecting several stickies ----------
+   "選択" in the dock (or shift-click) turns taps into picking: a tap toggles a sticky, a drag over empty
+   space draws a box that adds what it touches, two fingers still move the map. The bar at the bottom
+   then cuts the picked stickies loose from their parents or deletes them (with their child notes). */
+let selMode = false;
+const picked = new Set();
+const marq = $('#marquee');
+const pickable = () => idsOn(curBoard).filter(id => !(meta.get(id) || {}).h);
+function setPicked(next) {
+  for (const id of picked) if (!next.has(id)) { const r = els.get(id); if (r) r.el.classList.remove('picked'); }
+  for (const id of next) if (!picked.has(id)) { const r = els.get(id); if (r) r.el.classList.add('picked'); }
+  picked.clear();
+  for (const id of next) picked.add(id);
+  updateSelUI();
+}
+function togglePick(id) {
+  const next = new Set(picked);
+  if (next.has(id)) next.delete(id); else next.add(id);
+  setPicked(next);
+}
+function prunePicks() {           // only what is on this map and not folded away stays picked
+  const ok = new Set(pickable());
+  for (const id of [...picked]) if (!ok.has(id)) picked.delete(id);
+}
+function updateSelUI() {
+  markMini();
+  if (!selMode) return;
+  const txt = $('#selhead-txt');
+  if (picked.size) {
+    const b = document.createElement('b');
+    b.textContent = picked.size + '件';
+    txt.replaceChildren(b, 'を選択中');
+  } else txt.textContent = 'タップかなぞって選択 ・ 2本指で移動';
+  const vis = pickable(), all = vis.length > 0 && vis.every(id => picked.has(id));
+  $('#sel-all-txt').textContent = all ? '解除' : 'すべて';
+  $('#sel-all').setAttribute('aria-label', all ? '選択をすべて解除' : 'このマップの付箋をすべて選択');
+  $('#sel-all').disabled = !vis.length;
+  $('#sel-cut').disabled = ![...picked].some(id => (notes.get(id) || {}).p);
+  $('#sel-del').disabled = !picked.size;
+}
+function enterSelect(seed) {
+  if (inlineId) endInline();
+  if (editing) closeEditor();
+  if (!drawer.hidden) closeDrawer();
+  closeMenu();
+  select(null);
+  selMode = true;
+  html.classList.add('selecting');
+  world.classList.add('selecting');
+  $('#dock').hidden = true;
+  $('#selbar').hidden = false;
+  $('#selhead').hidden = false;
+  setPicked(new Set((seed || []).filter(id => notes.has(id) && onHere(id))));
+}
+function exitSelect() {
+  if (!selMode) return;
+  if (g && g.type === 'marquee') g = null;
+  marq.hidden = true;
+  selMode = false;
+  setPicked(new Set());
+  html.classList.remove('selecting');
+  world.classList.remove('selecting');
+  $('#dock').hidden = false;
+  $('#selbar').hidden = true;
+  $('#selhead').hidden = true;
+  updatePlace();
+  updateBoardBar();
+}
+function startMarquee() {
+  g.type = 'marquee';
+  g.base = new Set(picked);
+  marq.hidden = false;
+}
+function updateMarquee(cx, cy) {
+  const x0 = Math.min(g.sx, cx), y0 = Math.min(g.sy, cy), x1 = Math.max(g.sx, cx), y1 = Math.max(g.sy, cy);
+  marq.style.transform = 'translate(' + x0 + 'px,' + y0 + 'px)';
+  marq.style.width = (x1 - x0) + 'px';
+  marq.style.height = (y1 - y0) + 'px';
+  const a = toWorld(x0, y0), b = toWorld(x1, y1), next = new Set(g.base);
+  for (const id of pickable()) {
+    const n = notes.get(id);
+    if (n.x < b.x && n.x + wOf(n) > a.x && n.y < b.y && n.y + hOf(n) > a.y) next.add(id);
+  }
+  setPicked(next);
+}
+function pickAll() {
+  const vis = pickable();
+  setPicked(vis.every(id => picked.has(id)) ? new Set() : new Set(vis));
+}
+function detachPicked() {
+  const ids = [...picked].filter(id => (notes.get(id) || {}).p);
+  if (!ids.length) return;
+  const snap = snapshot(ids);
+  for (const id of ids) {
+    const n = notes.get(id);
+    if (!n.c) { n.c = meta.get(id).c; n.ac = true; }    // keeps the colour it had in its group
+  }
+  for (const id of ids) { const n = notes.get(id); n.p = null; n.at = Date.now(); }
+  renderAll(); save();
+  toast(ids.length + '件を親から切り離しました', '元に戻す', () => restoreSnap(snap));
+}
+/* deleting a sticky takes its child notes (and a board's contents) with it, as a single delete does;
+   when that is more than what was picked, say so first */
+async function deletePicked() {
+  const roots = [...picked];
+  if (!roots.length) return;
+  const ids = withContents([...new Set(roots.flatMap(id => [id, ...descendants(id)]))]);
+  const extra = ids.length - roots.length;
+  if (extra > 0) {
+    const ok = await ask('付箋を削除', '選んだ' + roots.length + '件と一緒に、その子メモやボードの中身' + extra + '件も削除されます。', [
+      {label: 'やめる', k: null},
+      {label: ids.length + '件を削除', k: 'del', cls: 'danger'}
+    ]);
+    if (!ok) return;
+  }
+  const snap = snapshot(ids);
+  picked.clear();
+  removeIds(ids);
+  updateSelUI();
+  haptic();
+  toast(ids.length + '件の付箋を削除しました', '元に戻す', () => {
+    for (const s of snap) notes.set(s.id, s);
+    renderAll(); save();
+  });
+}
+$('#btn-select').addEventListener('click', () => enterSelect());
+$('#sel-all').addEventListener('click', pickAll);
+$('#sel-cut').addEventListener('click', detachPicked);
+$('#sel-del').addEventListener('click', deletePicked);
+$('#sel-done').addEventListener('click', exitSelect);
 
 /* ---------- create / move / structure ---------- */
 function rectBusy(x, y, w, h, board, skip) {
@@ -1893,7 +2080,7 @@ function detach(id) {
   n.p = null;
   renderAll(); save();
   if (editing === id) fillEditorMeta(n);
-  toast('一番上の階層に移しました', '元に戻す', () => {
+  toast('親から切り離しました', '元に戻す', () => {
     n.p = oldP; n.c = oldC; n.ac = oldAc;
     renderAll(); save();
     if (editing === id) fillEditorMeta(n);
@@ -1943,6 +2130,7 @@ function cancelPress() {
   if (g && g.id) { const r = els.get(g.id); if (r) r.el.classList.remove('pressing'); }
 }
 function startPinch() {
+  if (g && g.type === 'marquee') { marq.hidden = true; setPicked(g.base); }   // the second finger was on its way: not a box after all
   const [a, b] = [...ptrs.values()];
   const m = {x: (a.x + b.x) / 2, y: (a.y + b.y) / 2};
   g = {type: 'pinch', d0: Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), z0: view.z, w: toWorld(m.x, m.y)};
@@ -1978,10 +2166,10 @@ map.addEventListener('pointerdown', e => {
   stopViewAnim();
   if (inlineId && e.target.closest('.rz')) { startResize(e); return; }   // the knob on the sticky being written
   const noteEl = e.target.closest('.note');
-  const kidBtn = e.target.closest('.kids');
-  g = {type: 'press', pid: e.pointerId, id: noteEl ? noteEl.dataset.id : null, kid: !!kidBtn, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY};
+  const kidBtn = selMode ? null : e.target.closest('.kids');      // while selecting, the count badge is just part of the sticky
+  g = {type: 'press', pid: e.pointerId, id: noteEl ? noteEl.dataset.id : null, kid: !!kidBtn, shift: e.shiftKey, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY};
   if (noteEl && !kidBtn) noteEl.classList.add('pressing');
-  if (!kidBtn) { showRing(e.clientX, e.clientY); pressT = setTimeout(onLongPress, LONG); }
+  if (!kidBtn && !selMode) { showRing(e.clientX, e.clientY); pressT = setTimeout(onLongPress, LONG); }
 });
 function onLongPress() {
   pressT = 0;
@@ -2024,18 +2212,20 @@ map.addEventListener('pointermove', e => {
   if (g.type === 'press') {
     if (Math.hypot(e.clientX - g.sx, e.clientY - g.sy) <= SLOP) return;
     cancelPress();
-    if (g.id && notes.has(g.id)) startDrag(g.id);
-    else g.type = 'pan';
-    moving();
+    if (g.id && notes.has(g.id)) { startDrag(g.id, selMode); moving(); }
+    else if (selMode) startMarquee();     // selecting: a drag over empty space draws a box
+    else { g.type = 'pan'; moving(); }
   }
   const dx = e.clientX - g.lx, dy = e.clientY - g.ly;
   g.lx = e.clientX; g.ly = e.clientY;
   if (g.type === 'pan') {
     view.x += dx; view.y += dy;
     requestView();
+  } else if (g.type === 'marquee') {
+    updateMarquee(e.clientX, e.clientY);
   } else if (g.type === 'drag') {
     moveIds(g.ids, dx / view.z, dy / view.z);
-    hitDrop(e.clientX, e.clientY);
+    if (!g.multi) hitDrop(e.clientX, e.clientY);
     edgeScroll();
   } else if (g.type === 'create') {
     if (!g.moved && Math.hypot(e.clientX - g.cx, e.clientY - g.cy) > SLOP) {
@@ -2054,13 +2244,16 @@ function followFinger() {
   paintEdge(n);
   markMini();
 }
-function startDrag(id) {
-  const ids = [id, ...descendants(id)];
-  g.type = 'drag'; g.ids = ids; g.set = new Set(ids); g.drop = null; g.dropOut = false; g.orig = positionsOf(ids);
+/* multi: while selecting, the whole selection moves together (each with its child notes); it is only moved,
+   never dropped into another sticky or board */
+function startDrag(id, multi) {
+  if (multi && !picked.has(id)) setPicked(new Set([...picked, id]));
+  const ids = [...new Set((multi ? [...picked] : [id]).flatMap(r => [r, ...descendants(r)]))];
+  g.type = 'drag'; g.ids = ids; g.set = new Set(ids); g.drop = null; g.dropOut = false; g.orig = positionsOf(ids); g.multi = !!multi;
   for (const i of ids) { const r = els.get(i); if (r) r.el.classList.add('lift'); }
   const r = els.get(id);
   if (r) r.el.classList.add('dragging');
-  if (curBoard) {            // inside a board: offer a way back out at the top
+  if (curBoard && !multi) {  // inside a board: offer a way back out at the top
     $('#dropout-txt').textContent = 'ここで離すと「' + short(boardName(notes.get(curBoard).bd), 10) + '」に出す';
     dropout.hidden = false;
     boardbar.hidden = true;
@@ -2102,7 +2295,7 @@ function edgeScroll() {
     if (!vx && !vy) return;
     view.x += vx; view.y += vy;
     applyView();
-    if (g.type === 'drag') { moveIds(g.ids, -vx / view.z, -vy / view.z); hitDrop(p.x, p.y); }
+    if (g.type === 'drag') { moveIds(g.ids, -vx / view.z, -vy / view.z); if (!g.multi) hitDrop(p.x, p.y); }
     else followFinger();
     edgeRAF = requestAnimationFrame(loop);
   };
@@ -2129,6 +2322,11 @@ function endPointer(e, cancelled) {
   if (edgeRAF) { cancelAnimationFrame(edgeRAF); edgeRAF = 0; }
   if (t.type === 'press') {
     if (cancelled) return;
+    if (selMode) { if (t.id && notes.has(t.id)) togglePick(t.id); return; }
+    if (t.shift && t.id && notes.has(t.id)) {        // shift-click: start selecting (with the sticky that was open, if any)
+      enterSelect(selId && selId !== t.id ? [selId, t.id] : [t.id]);
+      return;
+    }
     if (t.kid) toggleFold(notes.get(t.id));
     else if (t.id && notes.has(t.id)) {
       const now = performance.now();
@@ -2166,6 +2364,8 @@ function endPointer(e, cancelled) {
     settleSoon();
   } else if (t.type === 'resize') {
     endResize(t);
+  } else if (t.type === 'marquee') {
+    marq.hidden = true;
   } else {
     settleSoon();
   }
@@ -2181,7 +2381,7 @@ map.addEventListener('touchstart', e => {
 let lastPtrType = 'touch';
 map.addEventListener('pointerdown', e => { lastPtrType = e.pointerType; }, true);
 map.addEventListener('dblclick', e => {
-  if (lastPtrType !== 'mouse' || e.target.closest('.note')) return;
+  if (selMode || lastPtrType !== 'mouse' || e.target.closest('.note')) return;
   const w = toWorld(e.clientX, e.clientY);
   const n = createNote(null, w.x - W / 2, w.y - H / 2);
   startInline(n.id);
@@ -2526,6 +2726,7 @@ function startInline(id, opts) {
     r.el.appendChild(knob);
     html.classList.add('inline-editing');
     itb.hidden = false;
+    syncItb();
     select(id);
   }
   const target = opts.title && n.ht ? ieT : ieX;
@@ -2607,6 +2808,9 @@ $('#itb-detail').addEventListener('click', () => {
   endInline(true);
   if (id && notes.has(id)) openEditor(id, false);
 });
+/* a child note being written can be cut loose from its parent right from the bar */
+function syncItb() { const n = notes.get(inlineId); $('#itb-cut').hidden = !(n && n.p); }
+$('#itb-cut').addEventListener('click', () => { if (inlineId) detach(inlineId); });
 
 /* resizing: drag the knob on the corner of the sticky being written. Any size is fine; near a square
    (or the usual width) it settles on it, and the text is never hidden: the box stays at least as tall as it. */
@@ -2659,10 +2863,15 @@ addEventListener('resize', () => {
   readInsets(); applyView(); settleSoon();
 });
 document.addEventListener('keydown', e => {
+  if (selMode && $('#modal').hidden && !e.target.closest('input,textarea')) {     // selecting: Delete and Ctrl/⌘+A
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deletePicked(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') { e.preventDefault(); pickAll(); return; }
+  }
   if (e.key !== 'Escape') return;
   if (!$('#modal').hidden) closeModal();
   else if (!$('#menu').hidden) closeMenu();
   else if (!drawer.hidden) closeDrawer();
+  else if (selMode) exitSelect();
   else if (inlineId) endInline();
   else if (editing) closeEditor();
   else if (curBoard) goUp();
@@ -3050,6 +3259,8 @@ $('#m-help').addEventListener('click', () => {
     'ピンチで拡大・縮小。引いても文字は付箋に収まる大きさで全文が見え、さらに引くとグループ名だけになる',
     '右下の小さな地図をタップ → その場所へジャンプ',
     '付箋の右下の数字をタップ → 子メモを折りたたむ',
+    '下の「選択」→ 付箋をタップするか、空いた所をなぞって囲むと、まとめて切り離し・削除・移動ができる（地図は2本指で動かす。パソコンはShift+クリックでも選べる）',
+    '子メモをタップ → 下のバーの「切り離す」で親との線を切って独立させる（詳細の「親から切り離す」でも同じ）',
     '空のまま閉じた付箋は自動で消える'
   ].forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.append(li); });
   ask('操作のヒント', ul, [{label: 'OK', k: 'ok', cls: 'primary'}]);
@@ -3076,6 +3287,7 @@ function seed() {
   add(a, 'ピンチで拡大・縮小。引くと全体を見渡せます');
   add(a, '下の「一覧」から階層ツリーと検索');
   add(a, '右下の数字をタップすると子メモを折りたためます');
+  add(a, '下の「選択」で、まとめて削除や切り離しができます');
   const c = add(null, '例：アイデア', {c: 'pink'});
   const blog = add(c, 'ブログのネタ');
   add(blog, 'メモの整理術');
@@ -3162,7 +3374,7 @@ function boot() {
   }
 }
 boot();
-window.__fusen = {notes, view, get g() { return g; }, get editing() { return editing; }, get inline() { return inlineId; }, get board() { return curBoard; }, renderAll, fitAll, select, enterBoard};
+window.__fusen = {notes, view, get g() { return g; }, get editing() { return editing; }, get inline() { return inlineId; }, get board() { return curBoard; }, picked, get selMode() { return selMode; }, renderAll, fitAll, select, enterBoard};
 })();
 
 </script>
