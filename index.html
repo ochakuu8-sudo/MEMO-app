@@ -241,15 +241,14 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   content:"線でつなぐ";position:absolute;z-index:4;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);
   background:var(--accent);color:var(--accent-fg);font:600 12px/1 var(--font-ui);padding:7px 10px;border-radius:999px;white-space:nowrap;
 }
-.note.drop-in::after{content:"この付箋の中に入れる"}
+.note.drop-in::after{content:"選んだ付箋をこの中に入れる"}
 .note.drop-in .card{outline:3px dashed var(--accent);outline-offset:4px}
 .note.pop .card{animation:pop .34s cubic-bezier(.18,1.4,.4,1) both}
 @keyframes pop{from{transform:scale(.35);opacity:0}to{transform:scale(1);opacity:1}}
 .note.ping .card{animation:ping 1.1s ease-out}
 @keyframes ping{0%{box-shadow:0 0 0 0 var(--accent),var(--note-shadow)}100%{box-shadow:0 0 0 22px transparent,var(--note-shadow)}}
 /* the space inside a sticky: a sticky with stickies inside it carries a badge on its lower left (the count
-   inside); tapping it goes in. While a sticky is being dragged every sticky shows it, as the place to drop
-   something into that sticky. */
+   inside); tapping it goes in */
 .bi{width:16px;height:16px;color:var(--ink,var(--muted));flex:none}
 .inb{
   position:relative;display:flex;align-items:center;gap:3px;height:20px;padding:0 7px 0 5px;border:0;border-radius:10px;cursor:pointer;
@@ -261,7 +260,6 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   position:absolute;left:8px;bottom:-11px;z-index:1;background:var(--paper);
   box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 45%,transparent),0 1px 3px rgba(0,0,0,.16);
 }
-#world.dropping .note:not(.lift) > .inb[hidden]{display:flex!important}
 .note.drop-in > .inb{background:var(--accent);color:var(--accent-fg);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
 .note.inline > .inb{display:none}
 #world.searching .note:not(.match){opacity:.2}
@@ -563,6 +561,11 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   box-shadow:0 0 0 calc(2px * var(--iz)) var(--surface);
 }
 #world.selecting .note.picked .card{outline:calc(2.5px * var(--iz)) solid var(--accent);outline-offset:calc(3px * var(--iz))}
+/* the sticky the picked ones are about to go into: its label takes the place of its circle */
+#world.selecting .note.drop-in::after{
+  content:"選んだ付箋をこの中に入れる";top:auto;right:auto;left:50%;bottom:calc(100% + 10px);width:auto;aspect-ratio:auto;transform:translateX(-50%);
+  border-radius:999px;background:var(--accent);box-shadow:none;color:var(--accent-fg);font:600 12px/1 var(--font-ui);padding:7px 10px;white-space:nowrap;
+}
 #marquee{position:fixed;left:0;top:0;z-index:9;pointer-events:none;box-sizing:border-box;border:1.5px solid var(--accent);border-radius:4px;background:var(--accent-soft)}
 :root.selecting #place,:root.selecting #boardbar{display:none!important}
 #selhead{
@@ -1854,7 +1857,7 @@ function updateSelUI() {
   if (picked.size) {
     const b = document.createElement('b');
     b.textContent = picked.size + '件';
-    txt.replaceChildren(b, 'を選択中');
+    txt.replaceChildren(b, 'を選択中 ・ 付箋に重ねると中へ');
   } else txt.textContent = 'タップかなぞって選択 ・ 2本指で移動';
   const vis = pickable(), all = vis.length > 0 && vis.every(id => picked.has(id));
   $('#sel-all-txt').textContent = all ? '解除' : 'すべて';
@@ -2185,22 +2188,24 @@ function joinByDrop(id, tid, orig) {
     animateTo(before);
   });
 }
-/* moves a sticky (with what is inside it) onto another map; its lines to the stickies left behind go */
-function moveToBoard(id, target, near) {
-  const snap = snapshot([id]);
-  const n = notes.get(id), skip = new Set([id]);
+/* moves stickies (with what is inside them) onto another map, keeping how they sit to one another; their lines
+   to the stickies left behind go, the lines among them stay */
+function moveToBoard(ids, target, near) {
+  const snap = snapshot(ids), skip = new Set(ids), list = ids.map(i => notes.get(i)), bx = boundsOf(list);
   let tx, ty;
   if (near) { tx = near.x + wOf(near) + GX; ty = near.y; }
   else {
-    const tb = boundsOf(idsOn(target).filter(i => i !== id).map(i => notes.get(i)));
+    const tb = boundsOf(idsOn(target).filter(i => !skip.has(i)).map(i => notes.get(i)));
     if (tb) { tx = tb.x1 + 140; ty = tb.y0; } else { tx = 0; ty = 0; }
   }
-  for (let i = 0; i < 120 && rectBusy(tx, ty, wOf(n), hOf(n), target, skip); i++) ty += H + GY;
-  n.bd = target || null;
-  n.x = Math.round(tx); n.y = Math.round(ty);
-  n.at = Date.now();
-  for (const l of linksOf(id)) links.delete(l);
-  if (editing && withContents([id]).includes(editing) && !onHere(editing)) hideSheet();
+  for (let i = 0; i < 120 && rectBusy(tx, ty, bx.x1 - bx.x0, bx.y1 - bx.y0, target, skip); i++) ty += H + GY;
+  for (const n of list) {
+    n.bd = target || null;
+    n.x = Math.round(n.x - bx.x0 + tx); n.y = Math.round(n.y - bx.y0 + ty);
+    n.at = Date.now();
+  }
+  for (const lid of linksTouching(ids)) { const l = links.get(lid); if (!skip.has(l.a) || !skip.has(l.b)) links.delete(lid); }
+  if (editing && withContents(ids).includes(editing) && !onHere(editing)) hideSheet();
   renderAll(); save();
   return snap;
 }
@@ -2209,17 +2214,18 @@ function withOrigin(snap, orig) {
   if (orig) for (const s of snap) { const o = orig.get(s.id); if (o) { s.x = o.x; s.y = o.y; } }
   return snap;
 }
-function moveIn(id, boardId, orig) {
+const howMany = ids => (ids.length > 1 ? ids.length + '件を' : '');
+function moveIn(ids, boardId, orig) {
   const cur = curBoard;
-  const snap = withOrigin(moveToBoard(id, boardId), orig);
+  const snap = withOrigin(moveToBoard(ids, boardId), orig);
   ping(boardId);
   haptic();
-  toast('「' + short(titleOf(notes.get(boardId)), 12) + '」の中に入れました', '元に戻す', () => restoreSnap(snap, cur));
+  toast(howMany(ids) + '「' + short(titleOf(notes.get(boardId)), 12) + '」の中に入れました', '元に戻す', () => restoreSnap(snap, cur));
 }
-function moveOut(id, orig) {
+function moveOut(ids, orig) {
   const card = notes.get(curBoard), target = card.bd || null, cur = curBoard;
-  const snap = withOrigin(moveToBoard(id, target, card), orig);
-  toast('「' + short(boardName(target), 12) + '」に出しました', '元に戻す', () => restoreSnap(snap, cur));
+  const snap = withOrigin(moveToBoard(ids, target, card), orig);
+  toast(howMany(ids) + '「' + short(boardName(target), 12) + '」に出しました', '元に戻す', () => restoreSnap(snap, cur));
 }
 function removeIds(ids) {
   if (inlineId && ids.includes(inlineId)) endInline(true);
@@ -2527,7 +2533,7 @@ map.addEventListener('pointermove', e => {
     updateMarquee(e.clientX, e.clientY);
   } else if (g.type === 'drag') {
     moveIds(g.ids, dx / view.z, dy / view.z);
-    if (!g.multi) hitDrop(e.clientX, e.clientY);
+    hitDrop(e.clientX, e.clientY);
     edgeScroll();
   } else if (g.type === 'create') {
     if (!g.moved && Math.hypot(e.clientX - g.cx, e.clientY - g.cy) > SLOP) {
@@ -2546,8 +2552,9 @@ function followFinger() {
   paintLinksOf([n.id]);
   markMini();
 }
-/* A drag moves that sticky; while selecting, the picked stickies together (multi: only moved, never dropped
-   onto another sticky or into one). The lines at them follow. */
+/* A drag moves that sticky, or while selecting the picked stickies together (multi); the lines at them follow.
+   Let go over another sticky: the two are joined by a line, or while selecting, the picked ones go inside it.
+   Inside a sticky, the bar at the top takes them back out. */
 function startDrag(id, multi) {
   if (multi && !picked.has(id)) setPicked(new Set([...picked, id]));
   const ids = multi ? [...picked] : [id];
@@ -2555,9 +2562,9 @@ function startDrag(id, multi) {
   for (const i of ids) { const r = els.get(i); if (r) r.el.classList.add('lift'); }
   const r = els.get(id);
   if (r) r.el.classList.add('dragging');
-  if (!multi) world.classList.add('dropping');                 // every sticky shows where to drop into it
-  if (curBoard && !multi) {  // inside a sticky: offer a way back out at the top
-    $('#dropout-txt').textContent = 'ここで離すと「' + short(boardName(notes.get(curBoard).bd), 10) + '」に出す';
+  world.classList.add('dropping');                           // the lines keep out of the way of the drop
+  if (curBoard) {            // inside a sticky: offer a way back out at the top
+    $('#dropout-txt').textContent = 'ここで離すと' + (multi ? '選んだ' + ids.length + '件を' : '') + '「' + short(boardName(notes.get(curBoard).bd), 10) + '」に出す';
     dropout.hidden = false;
     boardbar.hidden = true;
     hideToast();
@@ -2570,20 +2577,17 @@ function hitDrop(cx, cy) {
     out = cx >= r.left - 28 && cx <= r.right + 28 && cy >= r.top - 30 && cy <= r.bottom + 22;
   }
   if (out !== g.dropOut) { g.dropOut = out; dropout.classList.toggle('on', out); if (out) haptic(); }
-  /* over a sticky: joined to it by a line; over the badge on its lower left: into the space inside it */
-  let tid = null, inside = false;
+  let tid = null;
   if (!out) {
     const el = document.elementFromPoint(cx, cy);
     const ne = el && el.closest ? el.closest('.note') : null;
     tid = ne ? ne.dataset.id : null;
-    inside = !!(tid && el.closest('.inb'));
     if (tid && g.set.has(tid)) tid = null;
   }
-  inside = inside && !!tid;
-  if (tid !== g.drop || inside !== !!g.dropIn) {
+  if (tid !== g.drop) {
     if (g.drop) { const r = els.get(g.drop); if (r) r.el.classList.remove('drop', 'drop-in'); }
-    g.drop = tid; g.dropIn = inside;
-    if (tid) { const r = els.get(tid); if (r) r.el.classList.add(inside ? 'drop-in' : 'drop'); haptic(); }
+    g.drop = tid;
+    if (tid) { const r = els.get(tid); if (r) r.el.classList.add(g.multi ? 'drop-in' : 'drop'); haptic(); }
   }
 }
 function edgeScroll() {
@@ -2601,7 +2605,7 @@ function edgeScroll() {
     if (!vx && !vy) return;
     view.x += vx; view.y += vy;
     applyView();
-    if (g.type === 'drag') { moveIds(g.ids, -vx / view.z, -vy / view.z); if (!g.multi) hitDrop(p.x, p.y); }
+    if (g.type === 'drag') { moveIds(g.ids, -vx / view.z, -vy / view.z); hitDrop(p.x, p.y); }
     else followFinger();
     edgeRAF = requestAnimationFrame(loop);
   };
@@ -2659,8 +2663,8 @@ function endPointer(e, cancelled) {
     if (t.drop) { const r = els.get(t.drop); if (r) r.el.classList.remove('drop', 'drop-in'); }
     const out = t.dropOut;
     endDropUI();
-    if (!cancelled && out && curBoard) moveOut(t.ids[0], t.orig);
-    else if (!cancelled && t.drop && t.dropIn) moveIn(t.ids[0], t.drop, t.orig);
+    if (!cancelled && out && curBoard) moveOut(t.ids, t.orig);
+    else if (!cancelled && t.drop && t.multi) moveIn(t.ids, t.drop, t.orig);
     else if (!cancelled && t.drop) joinByDrop(t.ids[0], t.drop, t.orig);
     else { paintLinksOf(t.ids); save(); markMini(true); }
     settleSoon();
@@ -2716,7 +2720,7 @@ function autoGrow() {
   fBody.style.height = Math.min(fBody.scrollHeight + 2, 420) + 'px';
 }
 /* where a sticky can be moved with the picker: home, or the inside of a sticky that already holds stickies
-   (into an empty one: drop it on that sticky's badge) */
+   (into an empty one: pick it in selection mode and drag it onto that sticky) */
 function moveTargets(n) {
   const moving = new Set(withContents([n.id]));
   return [...notes.values()].filter(m => !moving.has(m.id) && idsOn(m.id).length && m.id !== n.bd).map(m => m.id);
@@ -2808,7 +2812,7 @@ function fillEditorMeta(n) {
   $('#b-move').hidden = !hasMoveTarget(n);
   $('#inside-hint').textContent = curBoard === n.id ? 'いまこの付箋の中にいます。上のバーで外に戻れます。'
     : cnt ? 'この付箋の中に付箋が' + cnt + '件あります。付箋を長押しするか、左下の ▣ をタップしても中に入れます。'
-    : '付箋を長押しするか「中を開く」で、この付箋の中に付箋を置けます。ほかの付箋をドラッグして、この付箋の左下に出る ▣ の上で離しても入れられます。';
+    : '付箋を長押しするか「中を開く」で、この付箋の中に付箋を置けます。ほかの付箋を「選択」で選んで、この付箋の上までドラッグしても入れられます。';
   swatches.replaceChildren();
   for (const c of COLORS) {
     const b = document.createElement('button');
@@ -3002,7 +3006,7 @@ async function pickBoard(id) {
   if (!choice) return;
   const target = choice === '__home__' ? null : choice;
   if (editing === id) hideSheet();
-  moveToBoard(id, target);
+  moveToBoard([id], target);
   toast((target ? '「' + short(boardName(target), 12) + '」の中' : 'ホーム') + 'に移動しました', '見に行く', () => enterBoard(target, {focus: id}));
 }
 
@@ -3604,7 +3608,7 @@ $('#m-help').addEventListener('click', () => {
     '何もない所を長押しのまま指を動かすと、好きな場所に付箋を置ける',
     '付箋の中へは、書いている間の下のバーの「中へ」や、詳細の「中を開く」からも入れる',
     '中に付箋がある付箋は左下に ▣ と枚数が出る。▣ をタップするとその付箋の中に入れる',
-    '付箋をドラッグすると、ほかの付箋の左下に ▣ が出る。その上で離すと、その付箋の中に入る（線は外れる）。中では、上のバーへドラッグすると外に出せる',
+    'ほかの付箋の中に入れるには、「選択」で選んでから、入れたい付箋の上までドラッグして離す（外とつないでいた線は外れる）。中では、上のバーへドラッグすると外に出せる',
     'ピンチで拡大・縮小。引いても文字は付箋に収まる大きさで全文が見え、さらに引くと主な付箋の名前だけになる',
     '右下の小さな地図をタップ → その場所へジャンプ',
     '下の「選択」→ 付箋をタップするか、空いた所をなぞって囲むと、まとめて移動・見た目の変更・線を外す・削除ができる。「見た目」では選んだ付箋とその間の線に同じ見た目を付けられる（地図は2本指で動かす。パソコンはShift+クリックでも選べる）',
