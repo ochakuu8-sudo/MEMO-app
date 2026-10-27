@@ -434,19 +434,20 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 
 /* ---------- bar above the keyboard while writing in a sticky ---------- */
 #itb{
-  position:fixed;z-index:21;left:0;right:0;bottom:var(--kb);display:flex;align-items:center;gap:8px;box-sizing:border-box;
+  position:fixed;z-index:21;left:0;right:0;bottom:var(--kb);display:flex;align-items:center;gap:6px;box-sizing:border-box;
   padding-block:7px calc(7px + env(safe-area-inset-bottom,0px));
   padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));
   background:color-mix(in srgb,var(--surface) 94%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
   border-top:1px solid var(--line);
 }
 :root.kb #itb{padding-bottom:7px}
-#itb button{height:38px;padding:0 14px;border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-size:14.5px;display:flex;align-items:center;gap:6px;cursor:pointer}
+#itb button{flex:none;white-space:nowrap;height:38px;padding:0 12px;border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-size:14.5px;display:flex;align-items:center;gap:6px;cursor:pointer}
 #itb button svg{width:18px;height:18px}
 #itb button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:transparent;font-weight:700}
 #itb .sp{flex:1}
-@media (max-width:374px){#itb{gap:6px}#itb button{padding:0 10px}#itb #itb-done{padding:0 14px}}
-#itb #itb-done{background:var(--accent);color:var(--accent-fg);border-color:transparent;font-weight:700;padding:0 18px}
+#itb #itb-done{background:var(--accent);color:var(--accent-fg);border-color:transparent;font-weight:700;padding:0 16px}
+@media (max-width:374px){#itb button{padding:0 9px}#itb #itb-done{padding:0 13px}}
+@media (max-width:339px){#itb button:not(#itb-done) svg{display:none}}   /* the smallest phones: labels only */
 :root.inline-editing #dock,:root.inline-editing #minimap{display:none}
 .ttl-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 
@@ -1770,8 +1771,14 @@ function createNote(p, x, y) {
 function setPos(n, x, y) { n.x = x; n.y = y; placeNote(n); }
 function moveIds(ids, dx, dy) {
   for (const i of ids) { const n = notes.get(i); n.x += dx; n.y += dy; placeNote(n); }
-  for (const i of ids) paintEdge(notes.get(i));
+  paintEdgesOf(ids);
   markMini();
+}
+/* the lines into these notes and out to their child notes (which may not have moved with them) */
+function paintEdgesOf(ids) {
+  const es = new Set();
+  for (const i of ids) { if (!notes.has(i)) continue; es.add(i); for (const k of kidsOf(i)) es.add(k); }
+  for (const i of es) paintEdge(notes.get(i));
 }
 function animateTo(target, done) {
   const from = new Map();
@@ -1779,7 +1786,7 @@ function animateTo(target, done) {
   const finish = () => {
     for (const [id, to] of target) { const n = notes.get(id); if (n) { n.x = Math.round(to.x); n.y = Math.round(to.y); placeNote(n); } }
     sizeEdges();
-    for (const [id] of target) { const n = notes.get(id); if (n) paintEdge(n); }
+    paintEdgesOf([...target.keys()]);
     markMini(true); save();
     if (done) done();
   };
@@ -1793,7 +1800,7 @@ function animateTo(target, done) {
       n.x = f.x + (to.x - f.x) * e; n.y = f.y + (to.y - f.y) * e;
       placeNote(n);
     }
-    for (const [id] of target) { const n = notes.get(id); if (n) paintEdge(n); }
+    paintEdgesOf([...target.keys()]);
     markMini();
     if (t < 1) requestAnimationFrame(step); else finish();
   };
@@ -1928,10 +1935,10 @@ function restoreSnap(snap, keepBoard) {
   if (keepBoard !== undefined && (!keepBoard || notes.has(keepBoard))) curBoard = keepBoard;
   renderAll(); save();
 }
-function reparent(id, pid, orig) {
+function reparent(id, pid, orig, only) {
   const n = notes.get(id), target = notes.get(pid);
   if (!n || !target || n.p === pid) return;
-  const ids = [id, ...descendants(id)];
+  const ids = only || [id, ...descendants(id)];       // only: what was dragged, when it moved without its child notes
   const before = orig || positionsOf(ids), oldP = n.p, oldK = target.k, oldC = n.c, oldAc = n.ac;
   n.p = pid;
   if (n.ac) { n.c = null; n.ac = false; }   // an automatically picked colour follows the new group
@@ -1944,7 +1951,7 @@ function reparent(id, pid, orig) {
   for (const i of ids) { const m = notes.get(i); tgt.set(i, {x: m.x + dx, y: m.y + dy}); }
   renderAll();
   animateTo(tgt);
-  toast('「' + short(titleOf(target), 12) + '」の中に入れました', '元に戻す', () => {
+  toast('「' + short(titleOf(target), 12) + '」の子メモにしました', '元に戻す', () => {
     n.p = oldP; target.k = oldK; n.c = oldC; n.ac = oldAc;
     renderAll();
     animateTo(before);
@@ -2089,6 +2096,12 @@ map.addEventListener('pointerdown', e => {
   }
   if (e.target.closest('.ied')) {         // inside the text box being written: caret and selection are native
     lastTap = {id: inlineId, t: now, x: e.clientX, y: e.clientY};
+    /* ...but a finger that slides from the text moves the sticky (on its own: it is the chosen one).
+       A mouse drag there still selects text. */
+    if (e.pointerType !== 'mouse' && !ptrs.size && !navBusy) {
+      ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
+      g = {type: 'press', pid: e.pointerId, id: inlineId, ied: true, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY};
+    }
     return;
   }
   e.preventDefault();   // no compat mousedown: it would steal focus from the editor after a long-press
@@ -2181,12 +2194,17 @@ function followFinger() {
   paintEdge(n);
   markMini();
 }
-/* multi: while selecting, the whole selection moves together (each with its child notes); it is only moved,
-   never dropped onto another sticky or into one */
+/* What a drag moves. A sticky nobody chose first takes its child notes along. One chosen first moves alone:
+   the sticky that was tapped (the one with the outline), or, while selecting, the picked stickies together
+   (multi: only moved, never dropped onto another sticky or into one). Child notes folded away under a sticky
+   are part of it and always come along. */
 function startDrag(id, multi) {
   if (multi && !picked.has(id)) setPicked(new Set([...picked, id]));
-  const ids = [...new Set((multi ? [...picked] : [id]).flatMap(r => [r, ...descendants(r)]))];
-  g.type = 'drag'; g.ids = ids; g.set = new Set(ids); g.drop = null; g.dropOut = false; g.orig = positionsOf(ids); g.multi = !!multi;
+  const alone = !!multi || id === selId;
+  const withFolded = r => (notes.get(r).k ? [r, ...descendants(r)] : [r]);
+  const ids = [...new Set((multi ? [...picked] : [id]).flatMap(r => (alone ? withFolded(r) : [r, ...descendants(r)])))];
+  g.type = 'drag'; g.ids = ids; g.set = new Set(ids); g.drop = null; g.dropOut = false; g.orig = positionsOf(ids); g.multi = !!multi; g.alone = alone;
+  g.block = new Set([id, ...descendants(id)]);    // never onto its own child notes
   for (const i of ids) { const r = els.get(i); if (r) r.el.classList.add('lift'); }
   const r = els.get(id);
   if (r) r.el.classList.add('dragging');
@@ -2212,7 +2230,7 @@ function hitDrop(cx, cy) {
     const ne = el && el.closest ? el.closest('.note') : null;
     tid = ne ? ne.dataset.id : null;
     inside = !!(tid && el.closest('.inb'));
-    if (tid && (g.set.has(tid) || (!inside && notes.get(g.ids[0]).p === tid))) tid = null;
+    if (tid && (g.set.has(tid) || g.block.has(tid) || (!inside && notes.get(g.ids[0]).p === tid))) tid = null;
   }
   inside = inside && !!tid;
   if (tid !== g.drop || inside !== !!g.dropIn) {
@@ -2263,7 +2281,7 @@ function endPointer(e, cancelled) {
   g = null;
   if (edgeRAF) { cancelAnimationFrame(edgeRAF); edgeRAF = 0; }
   if (t.type === 'press') {
-    if (cancelled) return;
+    if (cancelled || t.ied) return;       // a tap in the text being written: just the caret
     if (selMode) { if (t.id && notes.has(t.id)) togglePick(t.id); return; }
     if (t.shift && t.id && notes.has(t.id)) {        // shift-click: start selecting (with the sticky that was open, if any)
       enterSelect(selId && selId !== t.id ? [selId, t.id] : [t.id]);
@@ -2294,8 +2312,8 @@ function endPointer(e, cancelled) {
     endDropUI();
     if (!cancelled && out && curBoard) moveOut(t.ids[0], t.orig);
     else if (!cancelled && t.drop && t.dropIn) moveIn(t.ids[0], t.drop, t.orig);
-    else if (!cancelled && t.drop) reparent(t.ids[0], t.drop, t.orig);
-    else { for (const i of t.ids) paintEdge(notes.get(i)); save(); markMini(true); }
+    else if (!cancelled && t.drop) reparent(t.ids[0], t.drop, t.orig, t.alone ? t.ids : null);
+    else { paintEdgesOf(t.ids); save(); markMini(true); }
     settleSoon();
   } else if (t.type === 'resize') {
     endResize(t);
@@ -3190,14 +3208,14 @@ $('#m-help').addEventListener('click', () => {
     '付箋を長押し → その付箋の中に入る（中にも付箋を置ける。上のバーで外に戻る）',
     '何もない所を長押しのまま指を動かすと、好きな場所に付箋を置ける',
     '子メモ（線でつながる付箋）は、詳細の「＋ 子メモ」か、付箋を別の付箋の上へドラッグして作る',
-    '付箋をドラッグ → 子メモごと移動。別の付箋の上で離すと、その付箋の子メモになる',
+    '付箋をドラッグ → 子メモごと移動。タップして選んである付箋（青い枠）は、その付箋だけ動く。別の付箋の上で離すと、その付箋の子メモになる',
     '付箋の中へは、書いている間の下のバーの「中へ」や、詳細の「中を開く」からも入れる',
     '中に付箋がある付箋は左下に ▣ と枚数が出る。▣ をタップするとその付箋の中に入れる',
     '付箋をドラッグすると、ほかの付箋の左下に ▣ が出る。その上で離すと、その付箋の中に入る。中では、上のバーへドラッグすると外に出せる',
     'ピンチで拡大・縮小。引いても文字は付箋に収まる大きさで全文が見え、さらに引くとグループ名だけになる',
     '右下の小さな地図をタップ → その場所へジャンプ',
     '付箋の右下の数字をタップ → 子メモを折りたたむ',
-    '下の「選択」→ 付箋をタップするか、空いた所をなぞって囲むと、まとめて切り離し・削除・移動ができる（地図は2本指で動かす。パソコンはShift+クリックでも選べる）',
+    '下の「選択」→ 付箋をタップするか、空いた所をなぞって囲むと、まとめて切り離し・削除・移動ができる。動かすと選んだ付箋だけが動く（地図は2本指で動かす。パソコンはShift+クリックでも選べる）',
     '子メモをタップ → 下のバーの「切り離す」で親との線を切って独立させる（詳細の「親から切り離す」でも同じ）',
     '空のまま閉じた付箋は自動で消える'
   ].forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.append(li); });
@@ -3221,7 +3239,7 @@ function seed() {
   add(a, '書いている間に右下の丸を引っぱると、大きさを変えられます');
   add(a, 'ダブルタップで詳細（色・子メモ・中の付箋など）');
   add(a, '付箋を長押しすると、その付箋の中に入れます。中にも付箋を置けます');
-  add(a, 'ドラッグで移動。別の付箋の上で離すと、その中に入ります');
+  add(a, 'ドラッグで子メモごと移動。タップしてから動かすと、その付箋だけ動きます');
   add(a, 'ピンチで拡大・縮小。引くと全体を見渡せます');
   add(a, '下の「一覧」から階層ツリーと検索');
   add(a, '右下の数字をタップすると子メモを折りたためます');
