@@ -2140,16 +2140,24 @@ function startPinch() {
 let skipTouchDefault = false;
 map.addEventListener('pointerdown', e => {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
+  /* a first finger (or a mouse press) while others still count as down: their release never reached the map
+     (the system took that touch over). Finish them as cancelled, or every touch from now on would look like
+     a second finger and nothing on the map would respond any more. */
+  if (e.isPrimary && ptrs.size) for (const id of [...ptrs.keys()]) endPointer({pointerId: id}, true);
+  const noteEl = e.target.closest('.note'), now = performance.now();
+  if (!selMode && noteEl && !e.target.closest('.kids,.rz') && lastTap && lastTap.id === noteEl.dataset.id &&
+      now - lastTap.t < DOUBLE_TAP && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40) {
+    /* second tap of a double tap, anywhere on the sticky: details. Decided as the finger lands, so it never
+       turns into a long press (a new child note), whether or not its release arrives. */
+    e.preventDefault();
+    skipTouchDefault = true;              // its touchstart is held back too, so no click follows it onto the sheet
+    lastTap = null;
+    const id = noteEl.dataset.id;
+    setTimeout(() => { if (notes.has(id)) openDetails(id); }, 0);   // after touchstart: the text box under the finger stays until then
+    return;
+  }
   if (e.target.closest('.ied')) {         // inside the text box being written: caret and selection are native
-    const now = performance.now();
-    if (lastTap && lastTap.id === inlineId && now - lastTap.t < DOUBLE_TAP && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40) {
-      e.preventDefault();                 // second tap of a double tap: details instead
-      skipTouchDefault = true;
-      lastTap = null;
-      const id = inlineId;
-      endInline(true);
-      openEditor(id, false);
-    } else lastTap = {id: inlineId, t: now, x: e.clientX, y: e.clientY};
+    lastTap = {id: inlineId, t: now, x: e.clientX, y: e.clientY};
     return;
   }
   e.preventDefault();   // no compat mousedown: it would steal focus from the editor after a long-press
@@ -2165,7 +2173,6 @@ map.addEventListener('pointerdown', e => {
   if (ptrs.size > 2) return;
   stopViewAnim();
   if (inlineId && e.target.closest('.rz')) { startResize(e); return; }   // the knob on the sticky being written
-  const noteEl = e.target.closest('.note');
   const kidBtn = selMode ? null : e.target.closest('.kids');      // while selecting, the count badge is just part of the sticky
   g = {type: 'press', pid: e.pointerId, id: noteEl ? noteEl.dataset.id : null, kid: !!kidBtn, shift: e.shiftKey, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY};
   if (noteEl && !kidBtn) noteEl.classList.add('pressing');
@@ -2329,15 +2336,10 @@ function endPointer(e, cancelled) {
     }
     if (t.kid) toggleFold(notes.get(t.id));
     else if (t.id && notes.has(t.id)) {
-      const now = performance.now();
       if (notes.get(t.id).bo) { lastTap = null; enterBoard(t.id); }
-      else if (lastTap && lastTap.id === t.id && now - lastTap.t < DOUBLE_TAP && Math.hypot(t.sx - lastTap.x, t.sy - lastTap.y) < 40) {
-        lastTap = null;
-        if (inlineId === t.id) endInline(true);
-        openEditor(t.id, false);            // double tap: details
-      } else {
-        lastTap = {id: t.id, t: now, x: t.sx, y: t.sy};
-        startInline(t.id);                   // single tap: write in the sticky itself, the map stays put
+      else {
+        lastTap = {id: t.id, t: performance.now(), x: t.sx, y: t.sy};
+        startInline(t.id);                   // single tap: write in the sticky itself, the map stays put (a second tap: see pointerdown)
       }
     }
     else if (inlineId) endInline();
@@ -2381,7 +2383,7 @@ map.addEventListener('touchstart', e => {
 let lastPtrType = 'touch';
 map.addEventListener('pointerdown', e => { lastPtrType = e.pointerType; }, true);
 map.addEventListener('dblclick', e => {
-  if (selMode || lastPtrType !== 'mouse' || e.target.closest('.note')) return;
+  if (selMode || editing || lastPtrType !== 'mouse' || e.target.closest('.note')) return;   // editing: that double-click opened details
   const w = toWorld(e.clientX, e.clientY);
   const n = createNote(null, w.x - W / 2, w.y - H / 2);
   startInline(n.id);
@@ -2507,6 +2509,14 @@ function openEditor(id, focus) {
     try { f.focus({preventScroll: true}); } catch (e) { f.focus(); }
   }
   sheet.querySelector('.sh-body').scrollTop = 0;
+}
+/* opened by a double tap: a click the browser may still send for that tap must not land on a button
+   of the sheet that has just slid in under the finger (such as ＋ 子メモ) */
+let sheetGuard = 0;
+sheet.addEventListener('click', e => { if (performance.now() < sheetGuard) { e.preventDefault(); e.stopPropagation(); } }, true);
+function openDetails(id) {
+  sheetGuard = performance.now() + 350;
+  openEditor(id, false);
 }
 function finishEdit(id) {
   const n = notes.get(id);
