@@ -516,12 +516,6 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .bulk{display:flex;flex-direction:column;gap:14px}
 .bulk h4{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--muted)}
 .bulk .acts{display:flex;flex-wrap:wrap;gap:8px}
-#links-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-#links-list button{
-  width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;text-align:left;cursor:pointer;
-  padding:9px 2px;border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent);font-size:15px;color:var(--fg);
-}
-#links-list li:last-child button{border-bottom:0}
 .kt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rel{width:24px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .kc{font:600 12px/1 var(--font-num);color:var(--muted);font-variant-numeric:tabular-nums}
@@ -537,7 +531,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 #swatches .inherit{background:var(--surface-2);color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--line)}
 .acts{display:flex;flex-wrap:wrap;gap:8px}
 .hint{margin:0;font-size:12.5px;line-height:1.6;color:var(--muted)}
-#links-list .bi,.go .bi,.res .bi{width:17px;height:17px}
+.go .bi,.res .bi{width:17px;height:17px}
 .pick{display:flex;flex-direction:column;max-height:50vh;overflow-y:auto;margin:0 -6px}
 .pick button{
   display:flex;align-items:center;gap:10px;border:0;background:transparent;text-align:left;cursor:pointer;
@@ -669,7 +663,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 }
 #selbar button{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  width:min(62px,calc((100vw - 52px) / 5));height:50px;border:0;border-radius:15px;background:transparent;cursor:pointer;
+  width:min(60px,calc((100vw - 56px) / 6));height:50px;border:0;border-radius:15px;background:transparent;cursor:pointer;
   font-size:10.5px;letter-spacing:.04em;color:var(--fg);white-space:nowrap;
 }
 #selbar button:active:not(:disabled){background:var(--surface-2)}
@@ -777,6 +771,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <nav id="selbar" class="glass" hidden aria-label="選んだ付箋の操作">
     <button id="sel-all" type="button"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></svg><span id="sel-all-txt">すべて</span></button>
     <button id="sel-look" type="button" aria-label="選んだ付箋の見た目をまとめて変える"><svg class="i" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 1.9-1 1.4-2-.5-1 .2-2.2 1.4-2.2H17a3.5 3.5 0 0 0 3.5-3.5c0-5.1-3.8-9.3-8.5-9.3z"/><circle cx="7.6" cy="11.4" r="1.1"/><circle cx="10.6" cy="7.4" r="1.1"/><circle cx="15.4" cy="8" r="1.1"/></svg>見た目</button>
+    <button id="sel-move" type="button" aria-label="選んだ付箋をほかのホームや付箋の中へ移動"><svg class="i" viewBox="0 0 24 24"><path d="M4 12h12.5M12.5 7.5 17 12l-4.5 4.5M20 5v14"/></svg>移動</button>
     <button id="sel-cut" type="button" aria-label="選んだ付箋の線をすべて外す"><svg class="i" viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.6"/><circle cx="6.5" cy="17" r="2.6"/><path d="M8.7 8.4 19.5 16.8M8.7 15.6 19.5 7.2"/></svg>線を外す</button>
     <button id="sel-del" type="button" aria-label="選んだ付箋を削除"><svg class="i" viewBox="0 0 24 24"><path d="M5 7h14M10 11v6M14 11v6M6.5 7l1 12h9l1-12M9.5 7V4.5h5V7"/></svg>削除</button>
     <button id="sel-done" type="button" aria-label="選択を終える"><svg class="i" viewBox="0 0 24 24"><path d="m5.5 12.5 4.2 4.2 8.8-9.4"/></svg>完了</button>
@@ -806,19 +801,6 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
       <input id="f-title" type="text" placeholder="タイトル" enterkeyhint="next" autocomplete="off" autocapitalize="off">
       <textarea id="f-body" placeholder="メモ" rows="3"></textarea>
       <div class="ttl-row"><div class="acts"><button id="f-ttl" class="chip" type="button" aria-pressed="false">タイトルを付ける</button><button id="f-sq" class="chip" type="button">元の大きさに戻す</button></div><span class="hint" id="f-when"></span></div>
-      <div class="sec">
-        <div class="sec-head"><h3 id="links-label">つながり</h3><button id="add-linked" class="chip accent" type="button">＋ つないで追加</button></div>
-        <ul id="links-list"></ul>
-        <p class="hint" id="links-hint"></p>
-      </div>
-      <div class="sec" id="inside-sec">
-        <div class="sec-head"><h3 id="inside-label">中の付箋</h3></div>
-        <div class="acts">
-          <button id="b-open" class="chip accent" type="button">中を開く</button>
-          <button id="b-move" class="chip" type="button">別の場所へ移動</button>
-        </div>
-        <p class="hint" id="inside-hint"></p>
-      </div>
       <div class="sec">
         <div class="sec-head"><h3>色</h3></div>
         <div id="swatches" role="radiogroup" aria-label="付箋の色、または背景の画像"></div>
@@ -2278,6 +2260,7 @@ function updateSelUI() {
   $('#sel-cut').disabled = !linksTouching([...picked]).length;
   $('#sel-del').disabled = !picked.size;
   $('#sel-look').disabled = !picked.size;
+  $('#sel-move').disabled = !picked.size;
 }
 function enterSelect(seed) {
   selectLink(null);
@@ -2398,6 +2381,7 @@ $('#btn-select').addEventListener('click', () => enterSelect());
 $('#sel-look').addEventListener('click', stylePicked);
 $('#sel-all').addEventListener('click', pickAll);
 $('#sel-cut').addEventListener('click', unlinkPicked);
+$('#sel-move').addEventListener('click', movePicked);
 $('#sel-del').addEventListener('click', deletePicked);
 $('#sel-done').addEventListener('click', exitSelect);
 
@@ -3129,26 +3113,12 @@ document.addEventListener('gestureend', e => e.preventDefault(), {passive: false
 
 /* ---------- editor sheet ---------- */
 const sheet = $('#sheet'), fTitle = $('#f-title'), fBody = $('#f-body');
-const crumbs = $('#crumbs'), linksList = $('#links-list'), swatches = $('#swatches');
+const crumbs = $('#crumbs'), swatches = $('#swatches');
 let editing = null;
 function autoGrow() {
   fBody.style.height = 'auto';
   fBody.style.height = Math.min(fBody.scrollHeight + 2, 420) + 'px';
 }
-/* where a sticky can be moved with the picker: home, or the inside of a sticky that already holds stickies
-   (into an empty one: pick it in selection mode and drag it onto that sticky) */
-function moveTargets(n) {
-  const moving = new Set(withContents([n.id]));
-  return [...notes.values()].filter(m => !moving.has(m.id) && idsOn(m.id).length && m.id !== n.bd).map(m => m.id);
-}
-const hasMoveTarget = n => !!n.bd || homes.length > 1 || moveTargets(n).length > 0;
-/* how a line looks from the sticky being edited: to it, from it, both ways, or just joined */
-const REL = {
-  line: ['<path d="M3 9h18"/>', t => '「' + t + '」と線でつながっています'],
-  out: ['<path d="M3 9h17M15 4.5 20 9l-5 4.5"/>', t => '「' + t + '」への矢印'],
-  in: ['<path d="M21 9H4M9 4.5 4 9l5 4.5"/>', t => '「' + t + '」からの矢印'],
-  both: ['<path d="M4 9h16M15 4.5 20 9l-5 4.5M9 4.5 4 9l5 4.5"/>', t => '「' + t + '」と両矢印']
-};
 /* one row of choices for one setting; cur is the value all its targets share (none pressed when they differ);
    swatch: a class prefix to show the choices as colour dots */
 function choiceRow(name, opts, cur, pick, swatch) {
@@ -3204,31 +3174,6 @@ function fillEditorMeta(n) {
   $('#f-sq').hidden = wOf(n) === W && (n.sh || H) === H;
   const d = new Date(n.at);
   $('#f-when').textContent = '更新 ' + fmtDate(n.at) + (fmtDate(n.at).includes(':') ? '' : ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'));
-  const ls = linksOf(n.id).map(lid => links.get(lid)).sort((A, B) => byPos(otherEnd(A, n.id), otherEnd(B, n.id)));
-  $('#links-label').textContent = ls.length ? 'つながり ' + ls.length : 'つながり';
-  linksList.replaceChildren(...ls.map(l => {
-    const o = notes.get(otherEnd(l, n.id)), li = document.createElement('li'), b = document.createElement('button');
-    const k = lv(l, 'k'), rel = REL[k === 'both' ? 'both' : k === 'arrow' ? (l.a === n.id ? 'out' : 'in') : 'line'];
-    b.type = 'button'; b.dataset.go = o.id;
-    b.setAttribute('aria-label', rel[1](titleOf(o)));
-    b.insertAdjacentHTML('beforeend', '<svg class="rel" viewBox="0 0 24 18" aria-hidden="true">' + rel[0] + '</svg>');
-    const dot = document.createElement('span'); dot.className = 'dot c-' + colorOf(o);
-    const kt = document.createElement('span'); kt.className = 'kt'; kt.textContent = titleOf(o);
-    b.append(dot, kt);
-    b.insertAdjacentHTML('beforeend', '<svg class="i chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>');
-    li.append(b);
-    return li;
-  }));
-  $('#links-hint').hidden = ls.length > 0;
-  $('#links-hint').textContent = '付箋をタップして書いている間、右に出る ● を引っぱって、ほかの付箋の上で離すと線でつながります。';
-  const cnt = boardCount(n.id);
-  $('#inside-label').textContent = cnt ? '中の付箋 ' + cnt : '中の付箋';
-  $('#b-open').hidden = curBoard === n.id;
-  $('#b-open').textContent = '中を開く' + (cnt ? '（' + cnt + '件）' : '');
-  $('#b-move').hidden = !hasMoveTarget(n);
-  $('#inside-hint').textContent = curBoard === n.id ? 'いまこの付箋の中にいます。上のバーで外に戻れます。'
-    : cnt ? 'この付箋の中に付箋が' + cnt + '件あります。付箋を長押しするか、左下の ▣ をタップしても中に入れます。'
-    : '付箋を長押しするか「中を開く」で、この付箋の中に付箋を置けます。ほかの付箋を「選択」で選んで、この付箋の上までドラッグしても入れられます。';
   swatches.replaceChildren();
   for (const c of COLORS) {
     const b = document.createElement('button');
@@ -3353,14 +3298,6 @@ fTitle.addEventListener('keydown', e => {
 fBody.addEventListener('input', () => { const n = editedNote(); if (!n) return; n.b = fBody.value; repaintEdited(n); autoGrow(); saveSoon(); });
 $('#done').addEventListener('click', closeEditor);
 crumbs.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) openEditor(b.dataset.go, false); });
-linksList.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) openEditor(b.dataset.go, false); });
-$('#add-linked').addEventListener('click', () => {        // a new sticky beside this one, joined to it by a line
-  const from = notes.get(editing);
-  if (!from) return;
-  const slot = slotBeside(from), n = createNote(slot.x, slot.y, true);
-  addLink(from.id, n.id);
-  openEditor(n.id, true);
-});
 swatches.addEventListener('click', e => {
   const b = e.target.closest('button');
   const n = notes.get(editing);
@@ -3459,14 +3396,13 @@ function relook(n, look, msg) {
 }
 $('#nl-paste').addEventListener('click', () => { const n = notes.get(editing); if (n && clip.note) relook(n, clip.note, '見た目を貼り付けました'); });
 $('#nl-reset').addEventListener('click', () => { const n = notes.get(editing); if (n) relook(n, NOTE_DEF, '元の見た目に戻しました'); });
-$('#b-open').addEventListener('click', () => { if (editing) openInside(editing); });
-$('#b-move').addEventListener('click', () => { if (editing) pickBoard(editing); });
 
-/* choose where a note goes: a home, or the inside of a sticky that holds stickies (shown as a tree) */
-async function pickBoard(id) {
-  const n = notes.get(id);
-  if (!n) return;
-  const blocked = new Set(withContents([id]));   // not into itself, nor into what is inside it
+/* 移動 while selecting: where the picked stickies go, together (keeping how they sit and the lines among
+   them): a home, or the inside of a sticky that holds stickies (shown as a tree). One undo. */
+async function movePicked() {
+  const ids = [...picked].filter(i => notes.has(i));
+  if (!ids.length) return;
+  const blocked = new Set(withContents(ids));    // not into one of them, nor into what is inside them
   const list = document.createElement('div');
   list.className = 'pick';
   const row = (b, d) => {
@@ -3474,7 +3410,7 @@ async function pickBoard(id) {
     btn.type = 'button';
     btn.dataset.b = b;
     btn.style.setProperty('--d', d);
-    const isCur = b === keyOf(n);
+    const isCur = b === curKey();
     btn.disabled = isCur || blocked.has(b);
     if (!isHome(b)) btn.insertAdjacentHTML('beforeend', BOARD_ICON.replace('class="i bi"', 'class="i bi c-' + colorOf(notes.get(b)) + '"'));
     else btn.insertAdjacentHTML('beforeend', HOUSE_ICON);
@@ -3491,11 +3427,11 @@ async function pickBoard(id) {
     const b = e.target.closest('button[data-b]');
     if (b && !b.disabled) resolveModal(b.dataset.b);
   });
-  const target = await ask('どこへ移動しますか', list, [{label: 'やめる', k: null}]);
-  if (!target || !(homeOf(target) || notes.has(target))) return;
-  if (editing === id) hideSheet();
-  moveToBoard([id], target);
-  toast('「' + short(boardName(target), 12) + '」' + (isHome(target) ? '' : 'の中') + 'に移動しました', '見に行く', () => enterBoard(target, {focus: id}));
+  const target = await ask(ids.length + '件をどこへ移動しますか', list, [{label: 'やめる', k: null}]);
+  if (!target || !(homeOf(target) || notes.has(target)) || blocked.has(target)) return;
+  const cur = curBoard, snap = moveToBoard(ids.filter(i => notes.has(i)), target);
+  haptic();
+  toast(ids.length + '件を「' + short(boardName(target), 12) + '」' + (isHome(target) ? '' : 'の中') + 'に移動しました', '元に戻す', () => restoreSnap(snap, cur));
 }
 
 /* ---------- writing straight into a sticky ----------
@@ -4328,17 +4264,17 @@ $('#m-help').addEventListener('click', () => {
     '線のパネルの「色・線の種類・先の形・ラベル」→ 線の色、実線・破線・点線、矢印の先（ひらいた・三角・丸）、線の真ん中に出す短い文字。「見た目をコピー」「貼り付け」でほかの線にも同じ見た目を付けられる',
     '付箋をダブルタップ → 詳細の「見た目」で形（四角・角丸・まる・角折れ）、見た目（付箋・カード・ふち・こい色）、文字の大きさ・位置・書体、スタンプを変えられる。「コピー」「貼り付け」でほかの付箋にも同じ見た目を付けられる',
     '新しく作る付箋は最後に選んだ形・見た目・文字の設定に、新しく引く線は最後に選んだ見た目になる',
-    '付箋をダブルタップ → 詳細（色・つながり・中の付箋など）。「＋ つないで追加」で、線でつながった付箋を作れる',
+    '付箋をダブルタップ → 詳細（文字・色や画像・見た目など）',
     '付箋をドラッグ → 移動（線は付いてくる）。ほかの付箋の上で離すと、その付箋と線でつながる',
     '付箋を長押し → その付箋の中に入る（中にも付箋を置ける。上のバーで外に戻る）',
     '何もない所を長押しのまま指を動かすと、好きな場所に付箋を置ける',
-    '付箋の中へは、書いている間の下のバーの「中へ」や、詳細の「中を開く」からも入れる',
+    '付箋の中へは、書いている間の下のバーの「中へ」からも入れる',
     '中に付箋がある付箋は左下に ▣ と枚数が出る。▣ をタップするとその付箋の中に入れる',
     'ほかの付箋の中に入れるには、「選択」で選んでから、入れたい付箋の上までドラッグして離す（外とつないでいた線は外れる）。中では、上のバーへドラッグすると外に出せる',
-    '上の「⌂ ホームの名前」をタップ → ホームの切り替え・追加。✎ で名前の変更や削除。付箋は詳細の「別の場所へ移動」でほかのホームへ移せる',
+    '上の「⌂ ホームの名前」をタップ → ホームの切り替え・追加。✎ で名前の変更や削除。付箋は「選択」で選んで「移動」を押すと、ほかのホームへ移せる',
     'ピンチで拡大・縮小。引いても文字は付箋に収まる大きさで全文が見え、さらに引くと主な付箋の名前だけになる',
     '右下の小さな地図をタップ → その場所へジャンプ',
-    '下の「選択」→ 付箋をタップするか、空いた所をなぞって囲むと、まとめて移動・見た目の変更・線を外す・削除ができる。「見た目」では選んだ付箋とその間の線に同じ見た目を付けられる（地図は2本指で動かす。パソコンはShift+クリックでも選べる）',
+    '下の「選択」→ 付箋をタップするか、空いた所をなぞって囲むと、まとめて動かす・見た目の変更・線を外す・削除ができる。「移動」で、ほかのホームや付箋の中へまとめて移せる。「見た目」では選んだ付箋とその間の線に同じ見た目を付けられる（地図は2本指で動かす。パソコンはShift+クリックでも選べる）',
     'パソコンでは、線を選んで Delete キーで消せる',
     '空のまま閉じた付箋は自動で消える'
   ].forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.append(li); });
@@ -4363,12 +4299,12 @@ function seed() {
     '書いている間に右下の丸を引っぱると、大きさを変えられます',
     '書いている間に右の ● を引っぱって、ほかの付箋の上で離すと線でつながります',
     '線をタップすると、線・矢印・両矢印や形を変えたり、消したりできます',
-    'ダブルタップで詳細（色・つながり・中の付箋など）',
+    'ダブルタップで詳細（色や画像・見た目など）',
     '付箋を長押しすると、その付箋の中に入れます。中にも付箋を置けます',
     'ドラッグで移動。ほかの付箋の上で離すと線でつながります',
     'ピンチで拡大・縮小。引くと全体を見渡せます',
     '詳細の「見た目」で付箋の形や文字、線のパネルで太さや色を変えられます',
-    '下の「選択」で、まとめて移動・線を外す・削除ができます'
+    '下の「選択」で、まとめて動かす・移動・線を外す・削除ができます'
   ].map(tip);
   const pink = {c: 'pink'};
   const c = add('例：アイデア', pink), blog = add('ブログのネタ', pink), want = add('欲しいもの\n電動歯ブラシ\n本棚', pink);
