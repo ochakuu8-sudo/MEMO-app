@@ -177,15 +177,6 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .note.lk-bold .card{background:var(--ink);color:var(--surface)}
 #world .note.sh-round.lk-card .card{background:var(--surface);box-shadow:var(--note-shadow),inset 0 0 0 7px var(--paper)}
 .note.sh-fold.lk-card .card::after,.note.sh-fold.lk-line .card::after{background:linear-gradient(225deg,var(--bg) 50%,var(--paper) 50%)}
-/* a picture behind the text: under a veil of the sticky's own colour so the text stays readable, or clear
-   (then the text gets a soft halo of that colour) */
-.note.has-img{--vb:var(--paper);--veil:color-mix(in srgb,var(--vb) 55%,transparent)}
-.note.has-img.lk-card,.note.has-img.lk-line{--vb:var(--surface)}
-.note.has-img.lk-bold{--vb:var(--ink)}
-.note.has-img.iv-clear{--veil:transparent}
-#world #notes .note.has-img .card,.note.pv.has-img .card{background:linear-gradient(var(--veil),var(--veil)),var(--img,none) center/cover no-repeat,var(--vb)}
-.note.has-img.iv-clear .t,.note.has-img.iv-clear .x{text-shadow:0 0 2px var(--vb),0 0 6px var(--vb),0 0 12px var(--vb)}
-.note.has-img.empty:not(.ht) .x::before{content:none}
 .note.lk-card .ied textarea,.note.lk-line .ied textarea{color:var(--fg)}
 .note.lk-bold .ied textarea{color:var(--surface)}
 .note.lk-card.empty .x::before,.note.lk-line.empty .x::before,.note.lk-card .t:empty::before,.note.lk-line .t:empty::before,
@@ -201,6 +192,14 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .note.al-center .ied textarea{text-align:center}
 .note.ff-gothic .x,.note.ff-gothic .ied .ie{font-family:var(--font-ui)}
 .note.ff-mincho .x,.note.ff-mincho .t,.note.ff-mincho .ied textarea{font-family:var(--font-mincho)}
+/* a picture behind the text takes the place of the colour: shown as it is, with no colour over it (nor the
+   look's coloured parts); the text gets a soft halo so it stays readable */
+.note.has-img{--vb:var(--surface)}
+#world #notes .note.has-img .card,.note.pv.has-img .card{background:var(--img,none) center/cover no-repeat,var(--vb);color:var(--fg);box-shadow:var(--note-shadow)}
+.note.has-img .t,.note.has-img .x,.note.has-img .ied textarea{color:var(--fg);text-shadow:0 0 2px var(--vb),0 0 6px var(--vb),0 0 12px var(--vb)}
+#world.z-mid #notes .note.has-img.lead .t,#world.z-mid #notes .note.has-img.lead:not(.ht) .x{color:var(--fg)}
+.note.has-img.empty:not(.ht) .x::before{content:none}
+.note.sh-fold.has-img .card::after{background:linear-gradient(225deg,var(--bg) 50%,color-mix(in srgb,var(--surface) 72%,var(--fg)) 50%)}
 .stp{
   position:absolute;z-index:2;right:-9px;top:-11px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
   font-size:17px;line-height:1;background:var(--surface);box-shadow:0 2px 6px rgba(0,0,0,.22),0 0 0 1px var(--line);pointer-events:none;
@@ -499,8 +498,13 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .chip[aria-pressed="true"]{border-color:transparent;background:var(--accent-soft);color:var(--accent);font-weight:600}
 .chip:disabled{opacity:.4;cursor:default}
 .srows{display:flex;flex-direction:column;gap:8px}
-.img-row{display:flex;align-items:center;gap:10px}
-.img-th{width:68px;height:46px;border-radius:9px;flex:none;background:center/cover no-repeat var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+/* the picture choice at the end of the colours */
+.img-sw{background-color:var(--surface-2)!important;background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;color:var(--muted)!important;box-shadow:inset 0 0 0 1.5px var(--line)!important}
+.img-sw svg{width:17px;height:17px}
+#swatches .img-sw[aria-checked="true"],.swb.img-sw[aria-pressed="true"]{box-shadow:inset 0 0 0 1.5px var(--line),0 0 0 2.5px var(--surface),0 0 0 4.5px var(--accent)!important}
+.swb.img-sw{display:inline-grid;place-items:center}
+#img-box{margin-top:4px}
+#img-box:empty{display:none}
 .srow{display:grid;grid-template-columns:6.6em minmax(0,1fr);align-items:center;gap:8px}
 .srow > span{font-size:12.5px;color:var(--muted)}
 .srow .opts{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
@@ -817,11 +821,8 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
       </div>
       <div class="sec">
         <div class="sec-head"><h3>色</h3></div>
-        <div id="swatches" role="radiogroup" aria-label="付箋の色"></div>
-      </div>
-      <div class="sec" id="img-sec">
-        <div class="sec-head"><h3>背景の画像</h3></div>
-        <div id="img-box" class="srows"></div>
+        <div id="swatches" role="radiogroup" aria-label="付箋の色、または背景の画像"></div>
+        <div id="img-box" class="acts"></div>
       </div>
       <div class="sec" id="look-sec">
         <div class="sec-head"><h3>見た目</h3><div class="acts"><button id="nl-copy" class="chip" type="button">コピー</button><button id="nl-paste" class="chip" type="button">貼り付け</button><button id="nl-reset" class="chip" type="button">元の見た目</button></div></div>
@@ -1062,7 +1063,7 @@ function cleanPreset(r) {
   if (r.ht) p.ht = true;
   if (num(r.w) > 0 && Math.round(num(r.w)) !== W) p.w = clamp(Math.round(num(r.w)), MIN_W, MAX_W);
   if (num(r.sh) > 0 && Math.round(num(r.sh)) !== H) p.sh = clamp(Math.round(num(r.sh)), MIN_H, MAX_H);
-  if (typeof r.img === 'string' && IMG_ID.test(r.img)) { p.img = r.img; if (r.iv === 'clear') p.iv = 'clear'; }
+  if (typeof r.img === 'string' && IMG_ID.test(r.img)) p.img = r.img;
   return p;
 }
 function cleanPresets(arr) {
@@ -1086,7 +1087,7 @@ function presetInto(n, p) {              // a new sticky as the preset makes it
   if (p.ht) n.ht = true;
   const sz = presetSize(p);
   n.w = sz.w; n.sh = sz.h;
-  if (p.img) { n.img = p.img; if (p.iv) n.iv = p.iv; }
+  if (p.img) n.img = p.img;
 }
 function presetFrom(n, name) {           // a preset that makes stickies like this one
   const p = {id: 'p' + uid(), name, c: colorOf(n)};
@@ -1094,7 +1095,7 @@ function presetFrom(n, name) {           // a preset that makes stickies like th
   if (n.ht) p.ht = true;
   if (wOf(n) !== W) p.w = wOf(n);
   if ((n.sh || H) !== H) p.sh = n.sh;
-  if (n.img) { p.img = n.img; if (n.iv) p.iv = n.iv; }
+  if (n.img) p.img = n.img;
   return p;
 }
 function setLook(obj, look, defs) {       // only what differs from the default is kept
@@ -1221,7 +1222,7 @@ function save() {
     if (n.h) o.h = n.h;
     if (n.c) o.c = n.c;
     if (n.s) o.s = 1;
-    if (n.img) { o.img = n.img; if (n.iv) o.iv = n.iv; }
+    if (n.img) o.img = n.img;
     lookOut(n, o, NOTE_DEF);
     arr.push(o);
   }
@@ -1284,7 +1285,7 @@ function sanitize(arr, v, larr) {
     };
     for (const k in NOTE_DEF) if (r[k] !== undefined && r[k] !== NOTE_DEF[k] && validIn(NOTE_OPTS[k], r[k])) n[k] = r[k];
     if (!n.bd && isHome(r.hm) && r.hm !== DEF_HOME) n.hm = r.hm.slice(0, 40);
-    if (typeof r.img === 'string' && IMG_ID.test(r.img)) { n.img = r.img; if (r.iv === 'clear') n.iv = 'clear'; }
+    if (typeof r.img === 'string' && IMG_ID.test(r.img)) n.img = r.img;
     if (v < 6 && r.p) n._p = String(r.p);
     const board = v < 5 && !!r.bo;
     if (v < 3 && !board) {
@@ -1423,11 +1424,10 @@ function paintNote(n) {
     if (sv && !r.stp) { r.stp = document.createElement('span'); r.stp.className = 'stp'; r.stp.setAttribute('aria-hidden', 'true'); r.el.append(r.stp); }
     if (sv) r.stp.textContent = sv; else if (r.stp) { r.stp.remove(); r.stp = null; }
   }
-  const im = n.img || '', iu = im ? imgs.url(im) : null, ik = im ? im + (iu ? '' : '?') + (n.iv || '') : '';
+  const im = n.img || '', iu = im ? imgs.url(im) : null, ik = im ? im + (iu ? '' : '?') : '';
   if (r.ik !== ik) {
     r.ik = ik;
     cl.toggle('has-img', !!im);
-    cl.toggle('iv-clear', !!im && n.iv === 'clear');
     if (iu) r.el.style.setProperty('--img', 'url("' + iu + '")'); else r.el.style.removeProperty('--img');
     if (im && !iu) imgs.load(im).then(ok => { if (ok) imageReady(im); });
   }
@@ -1452,7 +1452,7 @@ function paintNote(n) {
 function imageReady(id) {         // a picture just read from storage: the stickies showing it, and the details
   for (const n of here()) if (n.img === id) paintNote(n);
   const e = editing && notes.get(editing);
-  if (e && e.img === id) fillImage(e);
+  if (e && e.img === id) fillEditorMeta(e);
 }
 function placeNote(n) {
   const r = els.get(n.id);
@@ -3235,10 +3235,11 @@ function fillEditorMeta(n) {
     b.type = 'button';
     b.setAttribute('role', 'radio');
     b.dataset.c = c;
-    b.setAttribute('aria-checked', String(colorOf(n) === c));
+    b.setAttribute('aria-checked', String(!n.img && colorOf(n) === c));
     b.className = 'c-' + c; b.setAttribute('aria-label', CNAME[c]);
     swatches.append(b);
   }
+  swatches.append(imageSwatch(n.img, 'button'));
   fillImage(n);
   fillLook(n);
 }
@@ -3362,17 +3363,31 @@ $('#add-linked').addEventListener('click', () => {        // a new sticky beside
 });
 swatches.addEventListener('click', e => {
   const b = e.target.closest('button');
-  const n = editedNote();
+  const n = notes.get(editing);
   if (!b || !n) return;
+  if (b.dataset.img) { pickImage(imageTaker(n.id)); return; }
+  if (n.img) { changeImage(n, x => { delete x.img; x.c = b.dataset.c; }, '背景を色に戻しました'); return; }
+  editedNote();
   n.c = b.dataset.c;
   renderAll(); save(); fillEditorMeta(n);
 });
 $('#del').addEventListener('click', () => { if (editing) deleteNote(editing); });
 
 /* ---------- a picture behind a sticky ----------
-   Picked in the details; a sticky still at the usual size takes the picture's proportions. Each change can
-   be undone. */
-const IV_OPTS = [['soft', '読みやすく'], ['clear', '画像をくっきり']];
+   Picked at the end of the colours in the details, in place of a colour (a colour takes it off again); a
+   sticky still at the usual size takes the picture's proportions. Each change can be undone. */
+const PHOTO_ICON = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.7"/><path d="m4.5 17.5 5-4.5 3.5 3 2.5-2 4 3.5"/></svg>';
+function imageSwatch(img, kind) {   // the picture's place among the colours: its thumbnail, or a picture icon
+  const b = document.createElement('button');
+  b.type = 'button'; b.dataset.img = '1';
+  if (kind === 'button') { b.className = 'img-sw'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(!!img)); }
+  else { b.className = 'swb img-sw'; b.setAttribute('aria-pressed', String(!!img)); }
+  b.setAttribute('aria-label', img ? '背景の画像（タップで変える）' : '画像を背景にする');
+  const u = img && imgs.url(img);
+  if (u) b.style.backgroundImage = 'url("' + u + '")';
+  else { b.innerHTML = PHOTO_ICON; if (img) imgs.load(img).then(ok => { if (ok) imageReady(img); }); }
+  return b;
+}
 const imgFile = $('#imgfile');
 let imgTake = null;
 function pickImage(take) {          // take({id, w, h}) once the picked file is made small and stored
@@ -3393,54 +3408,38 @@ imgFile.addEventListener('change', async () => {
 });
 const fitHeight = (w, iw, ih) => clamp(Math.round(w * ih / iw), MIN_H, 480);
 function changeImage(n, change, msg) {
-  const keep = {img: n.img, iv: n.iv, sh: n.sh};
+  const keep = {img: n.img, c: n.c, sh: n.sh};
   change(n);
   n._mk = null; n.at = Date.now(); n.s = false;
   renderAll(); save();
   if (editing === n.id) fillEditorMeta(n);
   toast(msg, '元に戻す', () => {
-    for (const k of ['img', 'iv']) { if (keep[k] === undefined) delete n[k]; else n[k] = keep[k]; }
+    for (const k of ['img', 'c']) { if (keep[k] === undefined) delete n[k]; else n[k] = keep[k]; }
     n.sh = keep.sh; n._mk = null;
     renderAll(); save();
     if (editing === n.id) fillEditorMeta(n);
   });
 }
-function fillImage(n) {
-  const box = $('#img-box'), acts = document.createElement('div');
-  acts.className = 'acts';
-  const chip = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = t; b.addEventListener('click', fn); acts.append(b); return b; };
-  const take = got => {
-    const m = notes.get(n.id);
-    if (!m) return;
-    changeImage(m, x => {
-      const first = !x.img;
-      x.img = got.id;
-      if (first && wOf(x) === W && (x.sh || H) === H) x.sh = fitHeight(W, got.w, got.h);
-    }, '背景に画像を付けました');
-  };
-  if (!n.img) {
-    chip('＋ 画像を選ぶ', () => pickImage(take));
-    const p = document.createElement('p');
-    p.className = 'hint'; p.textContent = '写真や画像を、この付箋の背景にできます。';
-    box.replaceChildren(acts, p);
-    return;
-  }
-  const row = document.createElement('div'), th = document.createElement('span'), u = imgs.url(n.img);
-  row.className = 'img-row'; th.className = 'img-th';
-  if (u) th.style.backgroundImage = 'url("' + u + '")';
-  else imgs.load(n.img).then(ok => { if (ok) imageReady(n.img); });
-  chip('変える', () => pickImage(take));
-  chip('外す', () => changeImage(n, x => { delete x.img; delete x.iv; }, '背景の画像を外しました'));
+const imageTaker = id => got => {
+  const n = notes.get(id);
+  if (!n) return;
+  changeImage(n, x => {
+    const first = !x.img;
+    x.img = got.id;
+    if (first && wOf(x) === W && (x.sh || H) === H) x.sh = fitHeight(W, got.w, got.h);
+  }, '背景を画像にしました');
+};
+function fillImage(n) {             // under the colours, while a picture is the background
+  const box = $('#img-box');
+  box.replaceChildren();
+  if (!n.img) return;
+  const chip = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = t; b.addEventListener('click', fn); box.append(b); };
+  chip('画像を変える', () => pickImage(imageTaker(n.id)));
   const sz = imgs.size(n.img);
   if (sz && Math.abs(hOf(n) - fitHeight(wOf(n), sz.w, sz.h)) > 2) chip('画像の形に合わせる', () => changeImage(n, x => { x.sh = fitHeight(wOf(x), sz.w, sz.h); }, '画像の形に合わせました'));
-  row.append(th, acts);
-  box.replaceChildren(row, choiceRow('文字', IV_OPTS, n.iv || 'soft', v => {
-    const m = notes.get(editing);
-    if (!m) return;
-    if (v === 'soft') delete m.iv; else m.iv = v;
-    m.at = Date.now();
-    renderAll(); save(); fillImage(m);
-  }));
+  const p = document.createElement('p');
+  p.className = 'hint'; p.textContent = '色を選ぶと、画像は外れて色に戻ります。';
+  box.append(p);
 }
 $('#nl-copy').addEventListener('click', () => {
   const n = notes.get(editing);
@@ -3911,7 +3910,7 @@ function presetPreview(p, box) {
   const look = p || lastNote, sz = presetSize(p);
   const c = (p && p.c) || NEW_CYCLE[idsOn(curBoard).length % NEW_CYCLE.length], sc = styleCls(look);
   const el = document.createElement('div');
-  el.className = 'note pv c-' + c + (sc ? ' ' + sc : '') + (p && p.ht ? ' ht' : '') + (p && p.img ? ' has-img' + (p.iv === 'clear' ? ' iv-clear' : '') : '');
+  el.className = 'note pv c-' + c + (sc ? ' ' + sc : '') + (p && p.ht ? ' ht' : '') + (p && p.img ? ' has-img' : '');
   el.style.width = sz.w + 'px'; el.style.height = sz.h + 'px';
   el.style.transform = 'translate(-50%,-50%) scale(' + r1(Math.min(box.w / sz.w, box.h / sz.h) * 100) / 100 + ')';
   el.innerHTML = '<div class="card"><div class="t">タイトル</div><div class="x">メモ</div></div>';
@@ -3998,12 +3997,21 @@ async function editPreset(p, from) {
   name.maxLength = 20; name.setAttribute('aria-label', 'プリセットの名前');
   wrap.append(pvw, name, rows);
   const set = (k, v, def) => { if (v === def || v === undefined) delete d[k]; else d[k] = v; draw(); };
+  const take = got => {               // a picture in place of the colour
+    const first = !d.img;
+    d.img = got.id;
+    if (first && !d.w && !d.sh) d.sh = fitHeight(W, got.w, got.h);
+    draw();
+  };
   const draw = () => {
     pvw.replaceChildren(presetPreview(d, {w: 220, h: 100}));
     const r = [];
-    const col = choiceRow('色', [['', '順番'], ...COLORS.map(c => [c, CNAME[c]])], d.c || '', v => set('c', v || undefined), 'c-');
+    const col = choiceRow('色', [['', '順番'], ...COLORS.map(c => [c, CNAME[c]])], d.img ? null : d.c || '', v => { delete d.img; set('c', v || undefined); }, 'c-');
     const auto = col.querySelector('.swb.c-');
     if (auto) { auto.className = 'swb auto'; auto.setAttribute('aria-label', '色：いつもの順番'); }
+    const ib = imageSwatch(d.img, 'swatch');
+    ib.addEventListener('click', () => pickImage(take));
+    col.querySelector('.opts').append(ib);
     r.push(col);
     for (const k of Object.keys(NOTE_DEF)) r.push(choiceRow(NOTE_NAMES[k], NOTE_OPTS[k], d[k] !== undefined ? d[k] : NOTE_DEF[k], v => set(k, v, NOTE_DEF[k])));
     r.push(choiceRow('タイトル', [['0', 'なし'], ['1', 'あり']], d.ht ? '1' : '0', v => set('ht', v === '1' ? true : undefined)));
@@ -4017,20 +4025,6 @@ async function editPreset(p, from) {
       if (x[3] === H) delete d.sh; else d.sh = x[3];
       draw();
     }));
-    const ir = document.createElement('div'), lab = document.createElement('span'), box = document.createElement('div');
-    ir.className = 'srow'; lab.textContent = '背景の画像'; box.className = 'opts';
-    const chip = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = t; b.addEventListener('click', fn); box.append(b); };
-    const take = got => {
-      const first = !d.img;
-      d.img = got.id;
-      if (first && !d.w && !d.sh) d.sh = fitHeight(W, got.w, got.h);
-      draw();
-    };
-    if (d.img) { chip('変える', () => pickImage(take)); chip('外す', () => { delete d.img; delete d.iv; draw(); }); }
-    else chip('＋ 画像を選ぶ', () => pickImage(take));
-    ir.append(lab, box);
-    r.push(ir);
-    if (d.img) r.push(choiceRow('文字', IV_OPTS, d.iv || 'soft', v => set('iv', v, 'soft')));
     rows.replaceChildren(...r);
   };
   draw();
@@ -4155,7 +4149,7 @@ async function exportJSON() {
         w: Math.round(n.w || W), sh: Math.round(n.sh || H), h: n.h || 0,
         x: Math.round(n.x), y: Math.round(n.y), c: n.c || null, at: n.at}, NOTE_DEF);
       if (!n.bd && n.hm) o.hm = n.hm;
-      if (n.img) { o.img = n.img; if (n.iv) o.iv = n.iv; }
+      if (n.img) o.img = n.img;
       return o;
     }),
     links: [...links.values()].map(linkOut)});
@@ -4326,7 +4320,7 @@ $('#m-help').addEventListener('click', () => {
   [
     '何もない所を長押し → 付箋ができて、指を離すとそのまま書ける',
     '下の ＋ → どの付箋（プリセット）で作るかを選ぶ。長押しで作るときも、最後に選んだプリセットになる。「編集」でプリセットの見た目・大きさ・画像を変えたり消したりでき、付箋の詳細の「この付箋をプリセットにする」でも作れる',
-    '付箋の詳細の「背景の画像」→ 写真や画像を付箋の背景にできる（文字を読みやすく／画像をくっきり）',
+    '付箋の詳細の「色」の最後の画像ボタン → 写真や画像を付箋の背景にできる（色の代わり。色を選ぶと画像は外れる）',
     '付箋をタップ → その場で書き直せる（下のバーの「完了」で終わる）',
     '書いている間、付箋の右下の丸を引っぱる → 大きさを自由に変えられる（元の大きさや正方形の所で止まりやすい）',
     '書いている間、付箋の右の ● を引っぱってほかの付箋の上で離す → 線でつながる。何もない所で離すと、つながった新しい付箋ができる',
