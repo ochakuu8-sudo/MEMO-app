@@ -919,8 +919,11 @@ const store = (() => {
 })();
 
 /* ---------- pictures ----------
-   A picture behind a sticky's text is made smaller, then kept in IndexedDB (localStorage is too small for
-   pictures); the sticky names it (img). Where IndexedDB cannot be used, pictures last until the page closes. */
+   A picture behind a sticky's text is made small (a sticky is only a few hundred pixels wide, and small
+   pictures are quick to draw), then kept in IndexedDB (localStorage is too small for pictures); the sticky
+   names it (img). Where IndexedDB cannot be used, pictures last until the page closes. */
+const IMG_MAX = 600, IMG_MAX_SEE = 480;          // longest side kept, px; see-through pictures stay PNG, a bit smaller
+const tooBig = (type, w, h) => Math.max(w, h) > (/png/.test(type) ? IMG_MAX_SEE : IMG_MAX) + 8;
 const imgs = (() => {
   const mem = new Map(), urls = new Map(), loading = new Map();   // id -> {blob, w, h} / object URL / pending read
   let dbp = null;
@@ -951,10 +954,15 @@ const imgs = (() => {
     },
     load(id) {
       if (mem.has(id)) return Promise.resolve(true);
-      if (!loading.has(id)) loading.set(id, run('readonly', st => st.get(id)).then(v => {
+      if (!loading.has(id)) loading.set(id, run('readonly', st => st.get(id)).then(async v => {
+        if (!v || !v.buf) { loading.delete(id); return false; }
+        let rec = {blob: new Blob([v.buf], {type: v.type || 'image/jpeg'}), w: v.w, h: v.h};
+        if (tooBig(rec.blob.type, rec.w, rec.h)) {   // kept bigger before: made small once, and stored that way
+          const sm = await shrinkImage(rec.blob);
+          if (sm) { rec = sm; sm.blob.arrayBuffer().then(buf => run('readwrite', st => st.put({type: sm.blob.type, buf, w: sm.w, h: sm.h}, id))); }
+        }
+        keep(id, rec);
         loading.delete(id);
-        if (!v || !v.buf) return false;
-        keep(id, {blob: new Blob([v.buf], {type: v.type || 'image/jpeg'}), w: v.w, h: v.h});
         return true;
       }));
       return loading.get(id);
@@ -964,7 +972,8 @@ const imgs = (() => {
   };
 })();
 const IMG_ID = /^i[0-9a-z]{4,40}$/;
-/* a picked file, made at most 1440px on its longer side (1024 when it has see-through parts, kept as PNG) */
+/* a picked file (or a stored picture), made at most IMG_MAX on its longer side (IMG_MAX_SEE as PNG when it has
+   see-through parts) */
 async function shrinkImage(file) {
   const src = URL.createObjectURL(file);
   try {
@@ -972,14 +981,14 @@ async function shrinkImage(file) {
     const iw = im.naturalWidth, ih = im.naturalHeight;
     if (!iw || !ih) return null;
     const alpha = /png|gif|webp|avif/.test(file.type) && hasAlpha(im);
-    const sc = Math.min(1, (alpha ? 1024 : 1440) / Math.max(iw, ih));
+    const sc = Math.min(1, (alpha ? IMG_MAX_SEE : IMG_MAX) / Math.max(iw, ih));
     const w = Math.max(1, Math.round(iw * sc)), h = Math.max(1, Math.round(ih * sc));
     const cv = document.createElement('canvas');
     cv.width = w; cv.height = h;
     const cx = cv.getContext('2d');
     if (!alpha) { cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); }
     cx.drawImage(im, 0, 0, w, h);
-    const blob = await new Promise(res => cv.toBlob(res, alpha ? 'image/png' : 'image/jpeg', 0.84));
+    const blob = await new Promise(res => cv.toBlob(res, alpha ? 'image/png' : 'image/jpeg', 0.8));
     return blob ? {blob, w, h} : null;
   } catch (e) { return null; }
   finally { URL.revokeObjectURL(src); }
@@ -4203,7 +4212,10 @@ async function importImages(data) {   // the pictures a backup carries, into sto
   for (const id of Object.keys(all)) {
     const r = all[id];
     if (!IMG_ID.test(id) || !r || typeof r.d !== 'string' || !/^data:image\//.test(r.d)) continue;
-    try { const b = await (await fetch(r.d)).blob(); await imgs.put(id, b, +r.w || 1, +r.h || 1); } catch (e) {}
+    try {
+      const b = await (await fetch(r.d)).blob(), sm = tooBig(b.type, +r.w || 1, +r.h || 1) ? await shrinkImage(b) : null;
+      if (sm) await imgs.put(id, sm.blob, sm.w, sm.h); else await imgs.put(id, b, +r.w || 1, +r.h || 1);
+    } catch (e) {}
   }
 }
 $('#m-export').addEventListener('click', exportData);
