@@ -320,12 +320,45 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   -webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);
   box-shadow:var(--shadow);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);
 }
+/* at the top of a home: which home it is (tap: the homes), and where on it the screen is */
+#topbar{
+  position:fixed;z-index:10;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;justify-content:center;gap:8px;
+  padding:0 calc(16px + env(safe-area-inset-right,0px)) 0 calc(16px + env(safe-area-inset-left,0px));pointer-events:none;
+}
+#topbar > *{pointer-events:auto}
 #place{
-  position:fixed;z-index:10;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);
-  max-width:calc(100% - 32px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px));
+  flex:0 1 auto;min-width:0;
   display:flex;align-items:center;gap:6px;height:34px;padding:0 13px 0 9px;border-radius:999px;cursor:pointer;
   font-size:13px;color:var(--fg);white-space:nowrap;
 }
+#homes{
+  flex:none;min-width:0;max-width:46%;              /* the location pill gives way first */
+  display:flex;align-items:center;gap:5px;height:34px;padding:0 8px 0 10px;border-radius:999px;cursor:pointer;
+  font-size:13px;font-weight:700;color:var(--fg);white-space:nowrap;
+}
+#homes svg{width:17px;height:17px;color:var(--accent);flex:none}
+#homes .chev{width:15px;height:15px;color:var(--muted)}
+#homes span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+#homes:active,#place:active{background:var(--surface-2)}
+/* the homes list */
+.hlist{display:flex;flex-direction:column;max-height:50vh;overflow-y:auto;margin:0 -6px}
+.hrow{display:flex;align-items:center;gap:2px}
+.hrow .hgo,.hadd{
+  flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:transparent;text-align:left;cursor:pointer;
+  padding:11px 8px;border-radius:10px;font-size:15px;color:var(--fg);
+}
+.hrow.cur .hgo{font-weight:700}
+.hrow .hgo .bi{width:18px;height:18px;color:var(--muted)}
+.hrow.cur .hgo .bi{color:var(--accent)}
+.hed{width:42px;height:42px;border:0;background:transparent;border-radius:10px;display:grid;place-items:center;color:var(--muted);cursor:pointer;flex:none}
+.hed svg{width:18px;height:18px}
+.hadd{flex:none;color:var(--accent);font-weight:600;margin-top:2px}
+.hadd svg{width:18px;height:18px}
+.hrow .hgo:active,.hed:active,.hadd:active{background:var(--surface-2)}
+.name-in{width:100%;box-sizing:border-box;height:46px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);color:var(--fg);font:16px/1.2 var(--font-ui);padding:0 12px;outline:none}
+.name-in:focus,.name-in:focus-visible{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);outline:none}   /* inside: the dialog's scroll box would clip a ring outside */
+.row.home .go .bi{color:var(--accent)}
+.row.home .go{font-weight:600}
 #boardbar{
   position:fixed;z-index:11;left:0;right:0;margin:0 auto;width:max-content;box-sizing:border-box;
   max-width:calc(100% - 24px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px));
@@ -567,7 +600,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   border-radius:999px;background:var(--accent);box-shadow:none;color:var(--accent-fg);font:600 12px/1 var(--font-ui);padding:7px 10px;white-space:nowrap;
 }
 #marquee{position:fixed;left:0;top:0;z-index:9;pointer-events:none;box-sizing:border-box;border:1.5px solid var(--accent);border-radius:4px;background:var(--accent-soft)}
-:root.selecting #place,:root.selecting #boardbar{display:none!important}
+:root.selecting #topbar,:root.selecting #boardbar{display:none!important}
 #selhead{
   position:fixed;z-index:11;left:0;right:0;margin:0 auto;width:max-content;box-sizing:border-box;
   max-width:calc(100% - 32px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px));
@@ -656,10 +689,17 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <div id="empty" hidden><strong></strong><span></span></div>
   <div id="ring" aria-hidden="true"><svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="28"/></svg></div>
 
-  <button id="place" class="glass" type="button" hidden aria-label="現在地。タップで一覧を開きます">
-    <svg class="i" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.7-6.5-11a6.5 6.5 0 0 1 13 0c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>
-    <span id="place-txt"></span>
-  </button>
+  <div id="topbar">
+    <button id="homes" class="glass" type="button" aria-haspopup="dialog">
+      <svg class="i" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/></svg>
+      <span id="homes-txt">ホーム</span>
+      <svg class="i chev" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
+    </button>
+    <button id="place" class="glass" type="button" hidden aria-label="現在地。タップで一覧を開きます">
+      <svg class="i" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.7-6.5-11a6.5 6.5 0 0 1 13 0c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>
+      <span id="place-txt"></span>
+    </button>
+  </div>
 
   <nav id="boardbar" class="glass" hidden aria-label="いま中にいる付箋">
     <button id="bb-back" type="button" aria-label="ひとつ外のマップへ戻る"><svg class="i" viewBox="0 0 24 24"><path d="M15 5.5 8.5 12l6.5 6.5"/></svg></button>
@@ -722,7 +762,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
         <div class="sec-head"><h3 id="inside-label">中の付箋</h3></div>
         <div class="acts">
           <button id="b-open" class="chip accent" type="button">中を開く</button>
-          <button id="b-move" class="chip" type="button">別の付箋の中へ移動</button>
+          <button id="b-move" class="chip" type="button">別の場所へ移動</button>
         </div>
         <p class="hint" id="inside-hint"></p>
       </div>
@@ -793,7 +833,7 @@ const KEY = 'fusenmap.notes.v1', VKEY = 'fusenmap.view.v1';
 const COLORS = ['yellow', 'mint', 'pink', 'sky', 'lilac', 'peach', 'stone'];
 const NEW_CYCLE = ['yellow', 'mint', 'pink', 'sky', 'lilac', 'peach'];   // colours new stickies take in turn
 const CNAME = {yellow: '黄色', mint: 'ミント', pink: 'ピンク', sky: '水色', lilac: '藤色', peach: 'オレンジ', stone: 'グレー'};
-const HOME = '';
+const HOUSE_ICON = '<svg class="i bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/></svg>';
 const BOARD_ICON = '<svg class="i bi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><rect x="7" y="8" width="4.5" height="3.6" rx=".8"/><rect x="12.5" y="12" width="4.5" height="3.6" rx=".8"/></svg>';
 const $ = s => document.querySelector(s);
 const html = document.documentElement;
@@ -818,9 +858,9 @@ const store = (() => {
 })();
 
 /* ---------- model ----------
-   Every note lives on one map: the home map (bd = null) or the space inside another sticky (bd = that
-   sticky's id). Any sticky has such a space; it holds whatever was put in it, and "board" in the code
-   below means one of these spaces.
+   Every note lives on one map: a home (bd = null; which one is hm) or the space inside another sticky
+   (bd = that sticky's id). Any sticky has such a space; it holds whatever was put in it, and "board" in the
+   code below means one of these spaces. There can be several homes, side by side.
    Stickies are not ranked above one another: a relation between two of them is a link, drawn as a line,
    an arrow (from a to b) or a two-way arrow, curved or straight. Both ends of a link are on the same map. */
 const notes = new Map();          // id -> {id,bd,ht,t,b,w,sh,h,x,y,c,at,s}
@@ -872,11 +912,39 @@ let boardIdx = new Map();         // map key -> [all ids on that map]
 let linkIdx = new Map();          // note id -> [ids of the links at it]
 let countMemo = new Map();
 const fresh = new Set();          // created this session and not yet written in
-let curBoard = null;              // the map on screen (null = home)
-const bkey = b => b || HOME;
+/* The homes: the maps at the top, in the order shown. A map is named by a key: a sticky's id for the space
+   inside it, a home's id ('~…') for a home. A sticky on a home carries that home's id (hm), except on the
+   first home there was (DEF_HOME), so data from before there could be several reads as it is. */
+const DEF_HOME = '~h';
+let homes = [{id: DEF_HOME, name: 'ホーム'}];
+let curBoard = null;              // the sticky whose inside is on screen (null = a home)
+let curHome = DEF_HOME;           // the home on screen, or the one that sticky is in
+const isHome = k => typeof k === 'string' && k[0] === '~';
+const homeOf = id => homes.find(h => h.id === id) || null;
+const homeName = id => { const h = homeOf(id); return h ? h.name : 'ホーム'; };
+const homeIdOf = n => n.hm || DEF_HOME;          // for a note on a home
+const keyOf = n => n.bd || homeIdOf(n);          // the map a note is on
+function setHome(n, hid) { if (hid === DEF_HOME) delete n.hm; else n.hm = hid; }
+function placeOn(n, key) {                       // onto a map, where it is on that map stays as it is
+  if (isHome(key)) { n.bd = null; setHome(n, key); } else { n.bd = key; if (n.hm !== undefined) delete n.hm; }
+}
+const cleanHomeName = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, 30);
+function cleanHomes(arr) {                       // homes as saved; there is always at least one
+  const out = [], seen = new Set();
+  if (Array.isArray(arr)) for (const r of arr) {
+    if (!r || typeof r !== 'object') continue;
+    const id = String(r.id || '').slice(0, 40);
+    if (!isHome(id) || seen.has(id)) continue;
+    seen.add(id);
+    out.push({id, name: cleanHomeName(r.name) || 'ホーム'});
+  }
+  return out.length ? out : [{id: DEF_HOME, name: 'ホーム'}];
+}
+const bkey = b => b || curHome;                  // null: the home on screen
+const curKey = () => curBoard || curHome;
 const idsOn = b => boardIdx.get(bkey(b)) || [];
 const here = () => idsOn(curBoard).map(id => notes.get(id));
-const onHere = id => { const n = notes.get(id); return !!n && bkey(n.bd) === bkey(curBoard); };
+const onHere = id => { const n = notes.get(id); return !!n && keyOf(n) === curKey(); };
 const colorOf = n => (n && n.c) || 'yellow';
 const linksOf = id => linkIdx.get(id) || [];
 const otherEnd = (l, id) => (l.a === id ? l.b : l.a);
@@ -892,13 +960,18 @@ function reindex() {
     let b = n.bd;
     while (b) { if (seen.has(b)) { n.bd = null; break; } seen.add(b); b = notes.get(b).bd; }
   }
+  const hs = new Set(homes.map(h => h.id));
+  for (const n of notes.values()) {          // on a home that is there; inside a sticky, on no home
+    if (n.bd) { if (n.hm !== undefined) delete n.hm; }
+    else if (!hs.has(homeIdOf(n))) setHome(n, homes[0].id);
+  }
   for (const [id, l] of links) {           // a link needs both its ends, on one map
     const A = notes.get(l.a), B = notes.get(l.b);
-    if (!A || !B || l.a === l.b || bkey(A.bd) !== bkey(B.bd)) links.delete(id);
+    if (!A || !B || l.a === l.b || keyOf(A) !== keyOf(B)) links.delete(id);
   }
   boardIdx = new Map(); linkIdx = new Map(); countMemo = new Map();
   const push = (m, k, v) => { let a = m.get(k); if (!a) m.set(k, a = []); a.push(v); };
-  for (const n of notes.values()) push(boardIdx, bkey(n.bd), n.id);
+  for (const n of notes.values()) push(boardIdx, keyOf(n), n.id);
   for (const l of links.values()) { push(linkIdx, l.a, l.id); push(linkIdx, l.b, l.id); }
 }
 const byPos = (a, b) => { const A = notes.get(a), B = notes.get(b); return (A.y - B.y) || (A.x - B.x); };
@@ -936,7 +1009,7 @@ function titleOf(n) {
   const line = (n.b || '').split('\n').find(l => l.trim());
   return line ? line.trim() : (n.t.trim() || '空のメモ');
 }
-const boardName = b => (b ? titleOf(notes.get(b)) : 'ホーム');
+const boardName = b => (!b || isHome(b) ? homeName(bkey(b)) : titleOf(notes.get(b)));
 
 /* ---------- persistence ---------- */
 let saveT = 0, persistAsked = false;
@@ -946,6 +1019,7 @@ function save() {
   for (const n of notes.values()) {
     const o = {id: n.id, t: n.t, b: n.b, x: Math.round(n.x), y: Math.round(n.y), at: n.at};
     if (n.bd) o.bd = n.bd;
+    else if (n.hm) o.hm = n.hm;
     if (n.ht) o.ht = 1;
     o.w = Math.round(n.w || W); o.sh = Math.round(n.sh || H);
     if (n.h) o.h = n.h;
@@ -955,7 +1029,7 @@ function save() {
     arr.push(o);
   }
   const ls = [...links.values()].map(linkOut);
-  store.set(KEY, JSON.stringify({v: 6, notes: arr, links: ls}));
+  store.set(KEY, JSON.stringify({v: 6, notes: arr, links: ls, homes}));
   if (!persistAsked && navigator.storage && navigator.storage.persist) {
     persistAsked = true;
     navigator.storage.persist().catch(() => {});
@@ -971,7 +1045,7 @@ function linkOut(l) {
 const views = {};                 // map key -> last view on that map
 function saveView() {
   views[bkey(curBoard)] = {x: view.x, y: view.y, z: view.z, w: innerWidth, h: innerHeight};
-  store.set(VKEY, JSON.stringify({vv: 2, cur: curBoard, views, lk: lastLink, ln: lastNote}));
+  store.set(VKEY, JSON.stringify({vv: 2, cur: curBoard, hm: curHome, views, lk: lastLink, ln: lastNote}));
 }
 function restoreView(b) {
   const v = views[bkey(b)];
@@ -999,7 +1073,7 @@ function sanitize(arr, v, larr) {
   for (const r of arr) {
     if (!r || typeof r !== 'object') continue;
     const id = String(r.id || '').slice(0, 40);
-    if (!id || seen.has(id)) continue;
+    if (!id || seen.has(id) || isHome(id)) continue;
     seen.add(id);
     const num = v => (Number.isFinite(+v) ? +v : 0);
     const n = {
@@ -1012,6 +1086,7 @@ function sanitize(arr, v, larr) {
       c: COLORS.includes(r.c) ? r.c : null, at: num(r.at) || Date.now(), s: !!r.s
     };
     for (const k in NOTE_DEF) if (r[k] !== undefined && r[k] !== NOTE_DEF[k] && validIn(NOTE_OPTS[k], r[k])) n[k] = r[k];
+    if (!n.bd && isHome(r.hm) && r.hm !== DEF_HOME) n.hm = r.hm.slice(0, 40);
     if (v < 6 && r.p) n._p = String(r.p);
     const board = v < 5 && !!r.bo;
     if (v < 3 && !board) {
@@ -1067,10 +1142,10 @@ function squareUp(ids) {
   }
   reindex();
   const maps = new Set();
-  for (const id of set) { const n = notes.get(id); if (n) { measureNote(n); maps.add(bkey(n.bd)); } }
+  for (const id of set) { const n = notes.get(id); if (n) { measureNote(n); maps.add(keyOf(n)); } }
   for (const k of maps) {
     const placed = [];
-    for (const n of sortedOn(k === HOME ? null : k).map(i => notes.get(i))) {
+    for (const n of sortedOn(k).map(i => notes.get(i))) {
       if (set.has(n.id)) {
         for (let guard = 0; guard < 300; guard++) {
           const hit = placed.find(o => n.x < o.x + wOf(o) + GY && n.x + wOf(n) + GY > o.x && n.y < o.y + hOf(o) + GY && n.y + hOf(n) + GY > o.y);
@@ -1300,6 +1375,9 @@ function updateEmpty(isEmpty) {
   if (curBoard) {
     e.querySelector('strong').textContent = 'この付箋の中はまだ空です';
     e.querySelector('span').textContent = '何もない所を長押しすると付箋を置けます。上のバーからいつでも戻れます。';
+  } else if (homes.length > 1) {
+    e.querySelector('strong').textContent = '「' + short(homeName(curHome), 14) + '」はまだ空です';
+    e.querySelector('span').textContent = '何もない所を長押しすると付箋ができます。ほかのホームへは、上の「' + short(homeName(curHome), 8) + '」から。';
   } else {
     e.querySelector('strong').textContent = '何もない所を長押し';
     e.querySelector('span').textContent = '指を離すと付箋に書き込めます。付箋を長押しすると、その付箋の中に入れます。付箋どうしは線でつなげます。';
@@ -1308,6 +1386,8 @@ function updateEmpty(isEmpty) {
 function renderAll() {
   reindex();
   if (curBoard && !notes.has(curBoard)) curBoard = null;
+  if (curBoard) curHome = homeIdOf(notes.get(boardChain(curBoard)[0]));
+  else if (!homeOf(curHome)) curHome = homes[0].id;
   const ids = idsOn(curBoard), set = new Set(ids);
   if (inlineId && !set.has(inlineId)) endInline(true);
   for (const id of ids) if (id !== inlineId) measureNote(notes.get(id));   // reads first, then writes
@@ -1321,6 +1401,7 @@ function renderAll() {
   $('#minimap').hidden = ids.length === 0;
   markMini(true);
   updatePlace();
+  updateHomeChip();
   updateBoardBar();
   if (selId) select(selId);
   if (searchOn) markMatches();
@@ -1706,13 +1787,132 @@ function updatePlace() {
 }
 $('#place').addEventListener('click', () => { if (placeTarget) openDrawer(placeTarget); else fitAll(true); });
 
+/* ---------- homes ----------
+   The chip at the top of a home names it; tapped, it lists the homes: go to one, add one, rename or delete
+   one (with what is on it, after asking; undo brings it all back). There is always at least one. */
+const PEN_ICON = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5 5.4 15 15.6 4.8a2 2 0 0 1 2.8 0l.8.8a2 2 0 0 1 0 2.8L9 18.6z"/><path d="m13.8 6.6 3.6 3.6"/></svg>';
+const PLUS_ICON = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+function updateHomeChip() {
+  const b = $('#homes');
+  b.hidden = !!curBoard;
+  $('#homes-txt').textContent = homeName(curHome);
+  b.setAttribute('aria-label', 'いまのホーム「' + homeName(curHome) + '」。タップでホームを切り替え・追加');
+}
+function nextHomeName() {
+  for (let i = homes.length + 1; ; i++) { const nm = 'ホーム' + i; if (!homes.some(h => h.name === nm)) return nm; }
+}
+function nameField(value) {
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.className = 'name-in'; inp.value = value; inp.maxLength = 30;
+  inp.autocomplete = 'off'; inp.enterKeyHint = 'done'; inp.setAttribute('aria-label', 'ホームの名前');
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); resolveModal('ok'); } });
+  return inp;
+}
+async function openHomes() {
+  if (inlineId) endInline();
+  if (editing) closeEditor();
+  closeMenu();
+  selectLink(null);
+  const list = document.createElement('div');
+  list.className = 'hlist';
+  for (const h of homes) {
+    const row = document.createElement('div');
+    row.className = 'hrow' + (h.id === curHome ? ' cur' : '');
+    const go = document.createElement('button');
+    go.type = 'button'; go.className = 'hgo'; go.dataset.go = h.id;
+    go.insertAdjacentHTML('beforeend', HOUSE_ICON);
+    const t = document.createElement('span'); t.className = 'kt'; t.textContent = h.name;
+    const c = document.createElement('span'); c.className = 'kc'; c.textContent = (h.id === curHome ? 'いまここ ・ ' : '') + allInside(h.id).length + '件';
+    go.append(t, c);
+    const ed = document.createElement('button');
+    ed.type = 'button'; ed.className = 'hed'; ed.dataset.edit = h.id; ed.innerHTML = PEN_ICON;
+    ed.setAttribute('aria-label', '「' + h.name + '」の名前を変える・削除する');
+    row.append(go, ed);
+    list.append(row);
+  }
+  const add = document.createElement('button');
+  add.type = 'button'; add.className = 'hadd'; add.dataset.add = '1';
+  add.innerHTML = PLUS_ICON;
+  add.append('ホームを追加');
+  list.append(add);
+  list.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.go) resolveModal({go: b.dataset.go});
+    else if (b.dataset.edit) resolveModal({edit: b.dataset.edit});
+    else if (b.dataset.add) resolveModal({add: true});
+  });
+  const r = await ask('ホーム', list, [{label: '閉じる', k: null}]);
+  if (!r) return;
+  if (r.go) enterBoard(r.go);
+  else if (r.add) addHome();
+  else if (r.edit) editHome(r.edit);
+}
+$('#homes').addEventListener('click', openHomes);
+async function addHome() {
+  const inp = nameField(nextHomeName());
+  const p = ask('ホームを追加', inp, [{label: 'やめる', k: null}, {label: '作る', k: 'ok', cls: 'primary'}]);
+  setTimeout(() => { inp.focus(); inp.select(); }, 30);
+  if (await p !== 'ok') return;
+  const h = {id: '~' + uid(), name: cleanHomeName(inp.value) || nextHomeName()};
+  homes.push(h);
+  save();
+  enterBoard(h.id);
+  toast('「' + short(h.name, 12) + '」を作りました');
+}
+async function editHome(id) {
+  const h = homeOf(id);
+  if (!h) return;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;gap:10px';
+  const inp = nameField(h.name);
+  wrap.append(inp);
+  if (homes.length < 2) { const p = document.createElement('p'); p.className = 'hint'; p.textContent = 'ホームが1つだけのときは削除できません。'; wrap.append(p); }
+  const btns = [{label: 'やめる', k: null}, {label: '保存', k: 'ok', cls: 'primary'}];
+  if (homes.length > 1) btns.unshift({label: '削除', k: 'del', cls: 'danger'});
+  const p = ask('ホームの名前', wrap, btns);
+  setTimeout(() => inp.focus(), 30);
+  const r = await p;
+  if (r === 'ok') {
+    const nm = cleanHomeName(inp.value);
+    if (nm && nm !== h.name) { h.name = nm; save(); renderAll(); }
+  } else if (r === 'del') deleteHome(id);
+}
+async function deleteHome(id) {
+  const h = homeOf(id);
+  if (!h || homes.length < 2) return;
+  const ids = allInside(id);
+  const ok = await ask('ホームを削除', ids.length ? '「' + h.name + '」と、そこにある付箋' + ids.length + '件を削除します。' : '「' + h.name + '」を削除します。', [
+    {label: 'やめる', k: null},
+    {label: '削除', k: 'del', cls: 'danger'}
+  ]);
+  if (!ok || !homeOf(id) || homes.length < 2) return;
+  const idx = homes.indexOf(h), snap = snapshot(ids), wasHere = curHome === id;
+  if (inlineId && ids.includes(inlineId)) endInline(true);
+  if (editing && ids.includes(editing)) hideSheet();
+  homes.splice(idx, 1);
+  for (const i of ids) { notes.delete(i); fresh.delete(i); }
+  if (selId && !notes.has(selId)) select(null);
+  if (wasHere) enterBoard(homes[Math.min(idx, homes.length - 1)].id, {instant: true});
+  else renderAll();
+  delete views[id];
+  save();
+  toast('「' + short(h.name, 12) + '」を削除しました', '元に戻す', () => {
+    if (homeOf(id)) return;
+    homes.splice(Math.min(idx, homes.length), 0, h);
+    putBack(snap);
+    renderAll(); save();
+    enterBoard(id);
+  });
+}
+
 const boardbar = $('#boardbar'), bbCrumbs = $('#bb-crumbs'), dropout = $('#dropout');
 function updateBoardBar() {
   boardbar.hidden = !curBoard || !dropout.hidden;
   if (!curBoard) return;
   bbCrumbs.replaceChildren();
   const home = document.createElement('button');
-  home.type = 'button'; home.dataset.b = ''; home.textContent = 'ホーム';
+  home.type = 'button'; home.dataset.b = curHome; home.textContent = short(homeName(curHome), 10);
   bbCrumbs.append(home);
   const chain = boardChain(curBoard);
   chain.forEach((b, i) => {
@@ -1736,7 +1936,7 @@ bbCrumbs.addEventListener('click', e => {
   if (b.classList.contains('cur')) { openEditor(curBoard, false); return; }
   enterBoard(b.dataset.b || null);
 });
-function goUp() { if (curBoard) enterBoard(notes.get(curBoard).bd || null); }
+function goUp() { if (curBoard) enterBoard(keyOf(notes.get(curBoard))); }
 $('#bb-back').addEventListener('click', goUp);
 
 /* ---------- moving between maps ---------- */
@@ -1744,8 +1944,8 @@ let navBusy = false, navT = 0;
 function enterBoard(id, opts) {
   opts = opts || {};
   id = id || null;
-  if (id && !notes.has(id)) return;
-  if (bkey(id) === bkey(curBoard)) { if (opts.focus) focusNote(opts.focus); return; }
+  if (id && !notes.has(id) && !homeOf(id)) return;
+  if (bkey(id) === curKey()) { if (opts.focus) focusNote(opts.focus); return; }
   if (navBusy && !opts.instant) return;
   const from = curBoard;
   if (inlineId) endInline();
@@ -1757,7 +1957,7 @@ function enterBoard(id, opts) {
   select(null);
   const dive = id && onHere(id) ? notes.get(id) : null;      // the board being opened is on screen
   const swap = () => {
-    curBoard = id;
+    if (isHome(id)) { curBoard = null; curHome = id; } else curBoard = id;
     stopViewAnim();
     world.classList.remove('moving');
     renderAll();
@@ -2025,6 +2225,7 @@ function freeSpotNear(x, y, w, h) {
 function createNote(x, y) {
   const n = {id: uid(), bd: curBoard, t: '', b: '', w: W, sh: H, x: Math.round(x), y: Math.round(y),
     c: NEW_CYCLE[idsOn(curBoard).length % NEW_CYCLE.length], at: Date.now()};
+  if (!curBoard) setHome(n, curHome);
   setLook(n, Object.assign({}, lastNote), NOTE_DEF);      // the shape, look and text settings chosen last
   notes.set(n.id, n);
   fresh.add(n.id);
@@ -2107,7 +2308,7 @@ function roomFit() {
   }
   room.moved.clear();
   if (n && (wOf(n) - room.w0 > 3 || hOf(n) - room.h0 > 3)) {
-    const ids = idsOn(n.bd || null), p0 = new Map();
+    const ids = idsOn(keyOf(n)), p0 = new Map();
     for (const i of ids) { const o = notes.get(i); p0.set(i, {x: o.x, y: o.y}); }
     const peers = [];
     for (const i of ids) if (i !== n.id) peers.push(notes.get(i));
@@ -2201,7 +2402,7 @@ function moveToBoard(ids, target, near) {
   }
   for (let i = 0; i < 120 && rectBusy(tx, ty, bx.x1 - bx.x0, bx.y1 - bx.y0, target, skip); i++) ty += H + GY;
   for (const n of list) {
-    n.bd = target || null;
+    placeOn(n, bkey(target));
     n.x = Math.round(n.x - bx.x0 + tx); n.y = Math.round(n.y - bx.y0 + ty);
     n.at = Date.now();
   }
@@ -2224,7 +2425,7 @@ function moveIn(ids, boardId, orig) {
   toast(howMany(ids) + '「' + short(titleOf(notes.get(boardId)), 12) + '」の中に入れました', '元に戻す', () => restoreSnap(snap, cur));
 }
 function moveOut(ids, orig) {
-  const card = notes.get(curBoard), target = card.bd || null, cur = curBoard;
+  const card = notes.get(curBoard), target = keyOf(card), cur = curBoard;
   const snap = withOrigin(moveToBoard(ids, target, card), orig);
   toast(howMany(ids) + '「' + short(boardName(target), 12) + '」に出しました', '元に戻す', () => restoreSnap(snap, cur));
 }
@@ -2726,7 +2927,7 @@ function moveTargets(n) {
   const moving = new Set(withContents([n.id]));
   return [...notes.values()].filter(m => !moving.has(m.id) && idsOn(m.id).length && m.id !== n.bd).map(m => m.id);
 }
-const hasMoveTarget = n => !!n.bd || moveTargets(n).length > 0;
+const hasMoveTarget = n => !!n.bd || homes.length > 1 || moveTargets(n).length > 0;
 /* how a line looks from the sticky being edited: to it, from it, both ways, or just joined */
 const REL = {
   line: ['<path d="M3 9h18"/>', t => '「' + t + '」と線でつながっています'],
@@ -2780,7 +2981,7 @@ function fillEditorMeta(n) {
   crumbs.replaceChildren();
   const where = document.createElement('span');
   where.className = 'top';
-  where.textContent = n.bd ? '「' + short(boardName(n.bd), 12) + '」の中' : 'ホーム';
+  where.textContent = n.bd ? '「' + short(boardName(n.bd), 12) + '」の中' : homeName(homeIdOf(n));
   crumbs.append(where);
   fTitle.hidden = !n.ht;
   const tt = $('#f-ttl');
@@ -2973,7 +3174,7 @@ $('#nl-reset').addEventListener('click', () => { const n = notes.get(editing); i
 $('#b-open').addEventListener('click', () => { if (editing) openInside(editing); });
 $('#b-move').addEventListener('click', () => { if (editing) pickBoard(editing); });
 
-/* choose where a note goes: home, or the inside of a sticky that holds stickies (shown as a tree) */
+/* choose where a note goes: a home, or the inside of a sticky that holds stickies (shown as a tree) */
 async function pickBoard(id) {
   const n = notes.get(id);
   if (!n) return;
@@ -2983,32 +3184,30 @@ async function pickBoard(id) {
   const row = (b, d) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.dataset.b = b || '';
+    btn.dataset.b = b;
     btn.style.setProperty('--d', d);
-    const isCur = bkey(b) === bkey(n.bd);
-    btn.disabled = isCur || (b && blocked.has(b));
-    if (b) btn.insertAdjacentHTML('beforeend', BOARD_ICON.replace('class="i bi"', 'class="i bi c-' + colorOf(notes.get(b)) + '"'));
-    else btn.insertAdjacentHTML('beforeend', '<svg class="i bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/></svg>');
+    const isCur = b === keyOf(n);
+    btn.disabled = isCur || blocked.has(b);
+    if (!isHome(b)) btn.insertAdjacentHTML('beforeend', BOARD_ICON.replace('class="i bi"', 'class="i bi c-' + colorOf(notes.get(b)) + '"'));
+    else btn.insertAdjacentHTML('beforeend', HOUSE_ICON);
     const t = document.createElement('span'); t.className = 'kt'; t.textContent = boardName(b);
     btn.append(t);
     if (isCur) { const s = document.createElement('span'); s.className = 'kc'; s.textContent = 'いまここ'; btn.append(s); }
     list.append(btn);
   };
-  row(null, 0);
   const walk = (b, d) => {
     for (const x of idsOn(b).filter(i => idsOn(i).length).sort(byPos)) { row(x, d); walk(x, d + 1); }
   };
-  walk(null, 1);
+  for (const h of homes) { row(h.id, 0); walk(h.id, 1); }
   list.addEventListener('click', e => {
     const b = e.target.closest('button[data-b]');
-    if (b && !b.disabled) resolveModal(b.dataset.b || '__home__');
+    if (b && !b.disabled) resolveModal(b.dataset.b);
   });
-  const choice = await ask('どこへ移動しますか', list, [{label: 'やめる', k: null}]);
-  if (!choice) return;
-  const target = choice === '__home__' ? null : choice;
+  const target = await ask('どこへ移動しますか', list, [{label: 'やめる', k: null}]);
+  if (!target || !(homeOf(target) || notes.has(target))) return;
   if (editing === id) hideSheet();
   moveToBoard([id], target);
-  toast((target ? '「' + short(boardName(target), 12) + '」の中' : 'ホーム') + 'に移動しました', '見に行く', () => enterBoard(target, {focus: id}));
+  toast('「' + short(boardName(target), 12) + '」' + (isHome(target) ? '' : 'の中') + 'に移動しました', '見に行く', () => enterBoard(target, {focus: id}));
 }
 
 /* ---------- writing straight into a sticky ----------
@@ -3288,8 +3487,31 @@ function treeRow(id, d, revealId) {
   return row;
 }
 function pathText(n) {
-  const parts = boardChain(n.bd).map(b => titleOf(notes.get(b)));
-  return parts.length ? parts.join(' › ') : 'ホーム';
+  const chain = boardChain(n.bd), parts = chain.map(b => titleOf(notes.get(b)));
+  if (homes.length > 1 || !parts.length) parts.unshift(homeName(homeIdOf(chain.length ? notes.get(chain[0]) : n)));
+  return parts.join(' › ');
+}
+function homeRow(h) {             // a home in the outline, when there are several: tap it to go there
+  const inner = idsOn(h.id).length, open = !treeShut.has(h.id);
+  const row = document.createElement('div');
+  row.className = 'row home' + (h.id === curHome && !curBoard ? ' cur' : '');
+  row.style.setProperty('--d', 0);
+  row.dataset.home = h.id;
+  const caret = document.createElement('button');
+  caret.type = 'button';
+  caret.className = 'caret' + (inner ? '' : ' none');
+  caret.innerHTML = chevSvg;
+  if (inner) { caret.setAttribute('aria-expanded', String(open)); caret.setAttribute('aria-label', open ? '折りたたむ' : '開く'); }
+  else caret.tabIndex = -1;
+  const go = document.createElement('button');
+  go.type = 'button';
+  go.className = 'go';
+  go.insertAdjacentHTML('beforeend', HOUSE_ICON);
+  const tt = document.createElement('span'); tt.className = 'kt'; tt.textContent = h.name;
+  const kc = document.createElement('span'); kc.className = 'kc'; kc.textContent = allInside(h.id).length + '件';
+  go.append(tt, kc);
+  row.append(caret, go);
+  return row;
 }
 function renderTree(revealId) {
   const qv = q.value.trim().toLowerCase();
@@ -3327,7 +3549,9 @@ function renderTree(revealId) {
       if (treeShut.has(id)) return;
       for (const k of sortedOn(id)) walk(k, d + 1);            // what is inside it
     };
-    for (const k of sortedOn(null)) walk(k, 0);
+    if (homes.length > 1) {
+      for (const h of homes) { frag.append(homeRow(h)); if (!treeShut.has(h.id)) for (const k of sortedOn(h.id)) walk(k, 1); }
+    } else for (const k of sortedOn(homes[0].id)) walk(k, 0);
     if (!notes.size) { const p = document.createElement('p'); p.className = 'none-msg'; p.textContent = 'まだ付箋がありません。地図の何もない所を長押しすると作れます。'; frag.append(p); }
   }
   tree.replaceChildren(frag);
@@ -3356,19 +3580,21 @@ function goTo(id) {
   const n = notes.get(id);
   if (!n) return;
   if (!wide()) closeDrawer();
-  if (bkey(n.bd) !== bkey(curBoard)) { enterBoard(n.bd, {focus: id}); return; }
+  if (keyOf(n) !== curKey()) { enterBoard(keyOf(n), {focus: id}); return; }
   focusNote(id);
 }
 tree.addEventListener('click', e => {
   const caret = e.target.closest('.caret');
   if (caret && !caret.classList.contains('none')) {
-    const id = caret.parentNode.dataset.id, n = notes.get(id);
+    const id = caret.parentNode.dataset.id || caret.parentNode.dataset.home;
     if (treeShut.has(id)) treeShut.delete(id); else treeShut.add(id);
     renderTree();
     return;
   }
   const go = e.target.closest('.go');
   if (go) {
+    const h = go.parentNode.dataset.home;
+    if (h) { if (!wide()) closeDrawer(); enterBoard(h); return; }
     goTo(go.parentNode.dataset.id);
     return;
   }
@@ -3396,7 +3622,7 @@ function openMenu() {
   const info = $('#m-info');
   info.replaceChildren();
   const a = document.createElement('div');
-  a.textContent = '付箋 ' + notes.size + '件 ・ この端末の中だけに保存';
+  a.textContent = '付箋 ' + notes.size + '件' + (homes.length > 1 ? '（ホーム' + homes.length + 'つ）' : '') + ' ・ この端末の中だけに保存';
   info.append(a);
   if (!store.ok) {
     const w = document.createElement('div'); w.className = 'warn';
@@ -3461,9 +3687,14 @@ function stamp() {
 }
 function exportJSON() {
   return JSON.stringify({app: 'fusen-map', v: 6, exportedAt: new Date().toISOString(),
-    notes: [...notes.values()].map(n => lookOut(n, {id: n.id, bd: n.bd || null, ht: !!n.ht, t: n.t, b: n.b,
-      w: Math.round(n.w || W), sh: Math.round(n.sh || H), h: n.h || 0,
-      x: Math.round(n.x), y: Math.round(n.y), c: n.c || null, at: n.at}, NOTE_DEF)),
+    homes: homes.map(h => ({id: h.id, name: h.name})),
+    notes: [...notes.values()].map(n => {
+      const o = lookOut(n, {id: n.id, bd: n.bd || null, ht: !!n.ht, t: n.t, b: n.b,
+        w: Math.round(n.w || W), sh: Math.round(n.sh || H), h: n.h || 0,
+        x: Math.round(n.x), y: Math.round(n.y), c: n.c || null, at: n.at}, NOTE_DEF);
+      if (!n.bd && n.hm) o.hm = n.hm;
+      return o;
+    }),
     links: [...links.values()].map(linkOut)});
 }
 function copyFallback(json) {
@@ -3524,22 +3755,29 @@ $('#file').addEventListener('change', async () => {
   ]);
   if (!choice) return;
   const snap = [...notes.values()].map(n => Object.assign({}, n)), snapL = [...links.values()].map(l => Object.assign({}, l)), cur = curBoard;
+  const snapH = homes.map(h => Object.assign({}, h)), curH = curHome;
+  const fileHomes = data && Array.isArray(data.homes) ? cleanHomes(data.homes) : null;
+  let addedHomes = 0;
   if (choice === 'replace') {
     notes.clear(); links.clear();
+    homes = fileHomes || cleanHomes(null);
     for (const n of clean) notes.set(n.id, n);
     for (const l of got.links) links.set(l.id, l);
-    curBoard = null;
+    curBoard = null; curHome = homes[0].id;
   } else {
-    const idMap = new Map(clean.map(n => [n.id, uid()]));
+    /* added: a backup with several homes brings them as new homes; otherwise it all goes onto this map */
+    const idMap = new Map(clean.map(n => [n.id, uid()])), hMap = new Map();
+    if (fileHomes && fileHomes.length > 1) for (const h of fileHomes) { const nh = {id: '~' + uid(), name: h.name}; hMap.set(h.id, nh.id); homes.push(nh); }
+    addedHomes = hMap.size;
     const b = bounds();
     const top = clean.filter(n => !n.bd || !idMap.has(n.bd));
     let ix0 = Infinity, iy0 = Infinity;
     for (const n of top) { ix0 = Math.min(ix0, n.x); iy0 = Math.min(iy0, n.y); }
-    const ox = b ? b.x1 + 240 - ix0 : 0, oy = b ? b.y0 - iy0 : 0;
+    const ox = b && !addedHomes ? b.x1 + 240 - ix0 : 0, oy = b && !addedHomes ? b.y0 - iy0 : 0;
     for (const n of clean) {
-      const isTop = !n.bd || !idMap.has(n.bd);
+      const isTop = !n.bd || !idMap.has(n.bd), from = n.bd;
       n.id = idMap.get(n.id);
-      n.bd = isTop ? curBoard : idMap.get(n.bd);
+      placeOn(n, !isTop ? idMap.get(from) : addedHomes ? hMap.get(homeIdOf(n)) || hMap.get(fileHomes[0].id) : curKey());
       if (isTop) { n.x += ox; n.y += oy; }
       notes.set(n.id, n);
     }
@@ -3550,11 +3788,12 @@ $('#file').addEventListener('change', async () => {
   if (editing) hideSheet();
   select(null);
   renderAll(); save(); fitAll(true);
-  toast(choice === 'replace' ? '置き換えました' : clean.length + '件を追加しました', '元に戻す', () => {
+  toast(choice === 'replace' ? '置き換えました' : clean.length + '件を追加しました' + (addedHomes ? '（ホーム' + addedHomes + 'つ）' : ''), '元に戻す', () => {
     notes.clear(); links.clear();
+    homes = snapH;
     for (const n of snap) notes.set(n.id, n);
     for (const l of snapL) links.set(l.id, l);
-    curBoard = cur && notes.has(cur) ? cur : null;
+    curBoard = cur && notes.has(cur) ? cur : null; curHome = curH;
     renderAll(); save(); fitAll(true);
   });
 });
@@ -3569,7 +3808,7 @@ $('#m-samples').addEventListener('click', () => {
     while (tb && notes.get(tb) && notes.get(tb).s) tb = notes.get(tb).bd;
     if ((tb || null) !== (n.bd || null)) {
       const key = n.bd;
-      if (!groups.has(key)) groups.set(key, {target: tb || null, ids: []});
+      if (!groups.has(key)) groups.set(key, {target: tb || homeIdOf(notes.get(boardChain(n.bd)[0])), ids: []});
       groups.get(key).ids.push(n.id);
     }
   }
@@ -3577,9 +3816,9 @@ $('#m-samples').addEventListener('click', () => {
   for (const grp of groups.values()) {
     let x0 = Infinity, y0 = Infinity;
     for (const i of grp.ids) { const m = notes.get(i); x0 = Math.min(x0, m.x); y0 = Math.min(y0, m.y); }
-    const tb = boundsOf([...notes.values()].filter(m => alive(m) && bkey(m.bd) === bkey(grp.target) && !grp.ids.includes(m.id)));
+    const tb = boundsOf([...notes.values()].filter(m => alive(m) && keyOf(m) === grp.target && !grp.ids.includes(m.id)));
     const tx = tb ? tb.x1 + 200 : 0, ty = tb ? tb.y0 : 0;
-    for (const i of grp.ids) { const m = notes.get(i); m.bd = grp.target; m.x = Math.round(m.x - x0 + tx); m.y = Math.round(m.y - y0 + ty); }
+    for (const i of grp.ids) { const m = notes.get(i); placeOn(m, grp.target); m.x = Math.round(m.x - x0 + tx); m.y = Math.round(m.y - y0 + ty); }
   }
   leaveIfRemoved(new Set(ids));
   removeIds(ids);
@@ -3612,6 +3851,7 @@ $('#m-help').addEventListener('click', () => {
     '付箋の中へは、書いている間の下のバーの「中へ」や、詳細の「中を開く」からも入れる',
     '中に付箋がある付箋は左下に ▣ と枚数が出る。▣ をタップするとその付箋の中に入れる',
     'ほかの付箋の中に入れるには、「選択」で選んでから、入れたい付箋の上までドラッグして離す（外とつないでいた線は外れる）。中では、上のバーへドラッグすると外に出せる',
+    '上の「⌂ ホームの名前」をタップ → ホームの切り替え・追加。✎ で名前の変更や削除。付箋は詳細の「別の場所へ移動」でほかのホームへ移せる',
     'ピンチで拡大・縮小。引いても文字は付箋に収まる大きさで全文が見え、さらに引くと主な付箋の名前だけになる',
     '右下の小さな地図をタップ → その場所へジャンプ',
     '下の「選択」→ 付箋をタップするか、空いた所をなぞって囲むと、まとめて移動・見た目の変更・線を外す・削除ができる。「見た目」では選んだ付箋とその間の線に同じ見た目を付けられる（地図は2本指で動かす。パソコンはShift+クリックでも選べる）',
@@ -3704,7 +3944,7 @@ function boot() {
   const ver = loaded ? (+loaded.v || 1) : 6;
   const got = loaded && Array.isArray(loaded.notes) ? sanitize(loaded.notes, ver, loaded.links) : null;
   const arr = got && got.notes;
-  if (arr) { for (const n of arr) notes.set(n.id, n); for (const l of got.links) links.set(l.id, l); }
+  if (arr) { homes = cleanHomes(loaded.homes); for (const n of arr) notes.set(n.id, n); for (const l of got.links) links.set(l.id, l); }
   else seed();
   let v = null;
   try { v = JSON.parse(store.get(VKEY) || 'null'); } catch (e) {}
@@ -3712,6 +3952,8 @@ function boot() {
   if (v && v.ln && typeof v.ln === 'object') for (const k of NOTE_CARRY) if (validIn(NOTE_OPTS[k], v.ln[k])) lastNote[k] = v.ln[k];
   if (arr && v && v.views) {
     if (v.vv >= 2) Object.assign(views, v.views);        // views saved before vv 2 were mostly the far-out overview: open readable once
+    if ('' in views) { if (!views[DEF_HOME]) views[DEF_HOME] = views['']; delete views['']; }   // the one home, before there were several
+    if (isHome(v.hm) && homeOf(v.hm)) curHome = v.hm;
     if (v.cur && notes.has(v.cur)) curBoard = v.cur;
   }
   let before = null;
@@ -3749,7 +3991,7 @@ function boot() {
   }
 }
 boot();
-window.__fusen = {notes, links, get selLink() { return selLink; }, view, get g() { return g; }, get editing() { return editing; }, get inline() { return inlineId; }, get board() { return curBoard; }, picked, get selMode() { return selMode; }, renderAll, fitAll, select, enterBoard};
+window.__fusen = {notes, links, get selLink() { return selLink; }, view, get g() { return g; }, get editing() { return editing; }, get inline() { return inlineId; }, get board() { return curBoard; }, get home() { return curHome; }, get homes() { return homes; }, picked, get selMode() { return selMode; }, renderAll, fitAll, select, enterBoard};
 })();
 
 </script>
