@@ -177,6 +177,15 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .note.lk-bold .card{background:var(--ink);color:var(--surface)}
 #world .note.sh-round.lk-card .card{background:var(--surface);box-shadow:var(--note-shadow),inset 0 0 0 7px var(--paper)}
 .note.sh-fold.lk-card .card::after,.note.sh-fold.lk-line .card::after{background:linear-gradient(225deg,var(--bg) 50%,var(--paper) 50%)}
+/* a picture behind the text: under a veil of the sticky's own colour so the text stays readable, or clear
+   (then the text gets a soft halo of that colour) */
+.note.has-img{--vb:var(--paper);--veil:color-mix(in srgb,var(--vb) 55%,transparent)}
+.note.has-img.lk-card,.note.has-img.lk-line{--vb:var(--surface)}
+.note.has-img.lk-bold{--vb:var(--ink)}
+.note.has-img.iv-clear{--veil:transparent}
+#world #notes .note.has-img .card,.note.pv.has-img .card{background:linear-gradient(var(--veil),var(--veil)),var(--img,none) center/cover no-repeat,var(--vb)}
+.note.has-img.iv-clear .t,.note.has-img.iv-clear .x{text-shadow:0 0 2px var(--vb),0 0 6px var(--vb),0 0 12px var(--vb)}
+.note.has-img.empty:not(.ht) .x::before{content:none}
 .note.lk-card .ied textarea,.note.lk-line .ied textarea{color:var(--fg)}
 .note.lk-bold .ied textarea{color:var(--surface)}
 .note.lk-card.empty .x::before,.note.lk-line.empty .x::before,.note.lk-card .t:empty::before,.note.lk-line .t:empty::before,
@@ -396,6 +405,44 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 #dock button:active{background:var(--surface-2)}
 #dock #btn-add{width:54px;height:50px;margin:0 3px;background:var(--accent);color:var(--accent-fg);box-shadow:0 4px 12px -4px var(--accent)}
 #dock #btn-add svg{width:26px;height:26px;stroke-width:2.2}
+#dock #btn-add{position:relative}
+#add-dot{position:absolute;top:6px;right:7px;width:11px;height:11px;border-radius:50%;background:var(--paper);box-shadow:0 0 0 2px var(--accent)}
+
+/* ---------- presets: which sticky ＋ makes ---------- */
+#ptray{
+  position:fixed;z-index:26;left:0;right:0;margin:0 auto;bottom:calc(76px + env(safe-area-inset-bottom,0px));
+  width:min(520px,calc(100% - 24px));box-sizing:border-box;border-radius:18px;padding:10px 12px 10px;background:var(--surface);
+  display:flex;flex-direction:column;gap:6px;
+}
+.pt-head{display:flex;align-items:center;gap:8px}
+.pt-head h3{margin:0 0 0 2px;flex:1;font-size:14px;font-weight:700;color:var(--fg)}
+#pt-close{width:34px;height:34px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;color:var(--muted);cursor:pointer}
+#pt-close svg{width:18px;height:18px}
+.pt-list{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:8px 2px 4px;margin:0 -2px;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+.pt-list::-webkit-scrollbar{display:none}
+.pt{
+  position:relative;flex:none;width:90px;display:flex;flex-direction:column;align-items:center;gap:7px;padding:9px 4px 8px;
+  border:0;border-radius:14px;background:var(--surface-2);cursor:pointer;color:var(--fg);scroll-snap-align:start;
+}
+.pt.cur{box-shadow:inset 0 0 0 2px var(--accent)}
+.pt:disabled{opacity:.4;cursor:default}
+.pt:active{filter:brightness(.96)}
+.pt-name{font-size:12px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-ed{position:absolute;top:-5px;right:-3px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)}
+.pt-ed svg{width:13px;height:13px}
+.pt-plus{display:grid!important;place-items:center;color:var(--accent);border:1.5px dashed color-mix(in srgb,var(--accent) 55%,transparent);border-radius:10px;box-sizing:border-box}
+.pt-plus svg{width:22px;height:22px}
+#ptray .hint{margin:0 2px;font-size:11.5px}
+/* a small sticky drawn the way a preset makes one */
+.pv-box{position:relative;display:block;flex:none;pointer-events:none}
+.note.pv{position:absolute;left:50%;top:50%;transform-origin:50% 50%;contain:none}
+.note.pv .t,.note.pv .x{-webkit-line-clamp:2}
+.note.pv.sh-rounded .card{border-radius:18px}
+.note.pv.sh-round .card{border-radius:50%;padding:17% 13%;justify-content:center;text-align:center}
+.note.pv.sh-round.lk-card .card{background:var(--surface);box-shadow:var(--note-shadow),inset 0 0 0 7px var(--paper)}
+.pe-pv{display:grid;place-items:center;padding:14px 0;border-radius:12px;background:var(--bg);position:sticky;top:0;z-index:1;box-shadow:0 6px 10px -8px rgba(0,0,0,.25)}   /* stays in sight while the settings scroll */
+.pe{display:flex;flex-direction:column;gap:12px}
+#add-dot.auto,.swb.auto{background:conic-gradient(var(--yellow),var(--mint),var(--sky),var(--lilac),var(--pink),var(--peach),var(--yellow))}
 
 #minimap{
   position:fixed;z-index:10;right:max(12px,env(safe-area-inset-right,0px));
@@ -452,6 +499,8 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .chip[aria-pressed="true"]{border-color:transparent;background:var(--accent-soft);color:var(--accent);font-weight:600}
 .chip:disabled{opacity:.4;cursor:default}
 .srows{display:flex;flex-direction:column;gap:8px}
+.img-row{display:flex;align-items:center;gap:10px}
+.img-th{width:68px;height:46px;border-radius:9px;flex:none;background:center/cover no-repeat var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
 .srow{display:grid;grid-template-columns:6.6em minmax(0,1fr);align-items:center;gap:8px}
 .srow > span{font-size:12.5px;color:var(--muted)}
 .srow .opts{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
@@ -715,7 +764,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
   <nav id="dock" class="glass" aria-label="操作">
     <button id="btn-tree" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M5 4.5v13.5M5 7h3.5M5 13h3.5M5 18h3.5"/><rect x="10.5" y="4.5" width="9" height="5" rx="1.4"/><rect x="10.5" y="10.5" width="9" height="5" rx="1.4"/><path d="M10.5 18h9"/></svg>一覧</button>
     <button id="btn-fit" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><rect x="8.5" y="8.5" width="7" height="7" rx="1.5"/></svg>全体</button>
-    <button id="btn-add" type="button" aria-label="付箋を追加"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button id="btn-add" type="button" aria-label="付箋を追加" aria-haspopup="dialog" aria-expanded="false"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span id="add-dot" hidden></span></button>
     <button id="btn-select" type="button"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.4 12.3 2.5 2.5 4.8-5.1"/></svg>選択</button>
     <button id="btn-menu" type="button"><svg class="i" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></svg>その他</button>
   </nav>
@@ -770,10 +819,15 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
         <div class="sec-head"><h3>色</h3></div>
         <div id="swatches" role="radiogroup" aria-label="付箋の色"></div>
       </div>
+      <div class="sec" id="img-sec">
+        <div class="sec-head"><h3>背景の画像</h3></div>
+        <div id="img-box" class="srows"></div>
+      </div>
       <div class="sec" id="look-sec">
         <div class="sec-head"><h3>見た目</h3><div class="acts"><button id="nl-copy" class="chip" type="button">コピー</button><button id="nl-paste" class="chip" type="button">貼り付け</button><button id="nl-reset" class="chip" type="button">元の見た目</button></div></div>
         <div class="srows" id="note-look"></div>
-        <p class="hint">新しく作る付箋は、最後に選んだ形・見た目・文字の設定になります（色とスタンプはそのつど）。</p>
+        <div class="acts"><button id="nl-preset" class="chip" type="button">この付箋をプリセットにする</button></div>
+        <p class="hint">プリセットにすると、下の ＋ からこの色・見た目・大きさ・画像で付箋を作れます。「いつもの」で作る付箋は、最後に選んだ形・見た目・文字の設定になります（色は順番）。</p>
       </div>
       <div class="sec">
         <div class="acts">
@@ -807,9 +861,16 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stro
     <div class="info" id="m-info"></div>
   </div>
 
+  <div id="ptray" class="glass" hidden role="dialog" aria-label="どの付箋で作るか">
+    <div class="pt-head"><h3>どれで作る？</h3><button id="pt-edit" class="chip" type="button" aria-pressed="false">編集</button><button id="pt-close" type="button" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div id="pt-list" class="pt-list"></div>
+    <p class="hint" id="pt-hint"></p>
+  </div>
+
   <div id="toast" hidden role="status"><span id="toast-msg"></span><button id="toast-act" type="button" hidden></button></div>
   <div id="modal" hidden><div class="mbox" role="dialog" aria-modal="true" aria-labelledby="m-title"><h2 id="m-title"></h2><div id="m-content"></div><div class="mbtns" id="m-btns"></div></div></div>
   <input id="file" type="file" accept="application/json,.json" hidden>
+  <input id="imgfile" type="file" accept="image/*" hidden>
   <label id="hap" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 </div>
 
@@ -857,6 +918,82 @@ const store = (() => {
   };
 })();
 
+/* ---------- pictures ----------
+   A picture behind a sticky's text is made smaller, then kept in IndexedDB (localStorage is too small for
+   pictures); the sticky names it (img). Where IndexedDB cannot be used, pictures last until the page closes. */
+const imgs = (() => {
+  const mem = new Map(), urls = new Map(), loading = new Map();   // id -> {blob, w, h} / object URL / pending read
+  let dbp = null;
+  const db = () => dbp || (dbp = new Promise(res => {
+    try {
+      const rq = indexedDB.open('fusenmap', 1);
+      rq.onupgradeneeded = () => { rq.result.createObjectStore('img'); };
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = rq.onblocked = () => res(null);
+    } catch (e) { res(null); }
+  }));
+  const run = (mode, fn) => db().then(d => d && new Promise(res => {
+    try {
+      const t = d.transaction('img', mode), rq = fn(t.objectStore('img'));
+      t.oncomplete = () => res(rq ? rq.result : true);
+      t.onerror = t.onabort = () => res(null);
+    } catch (e) { res(null); }
+  }));
+  const keep = (id, rec) => { mem.set(id, rec); if (!urls.has(id)) urls.set(id, URL.createObjectURL(rec.blob)); };
+  return {
+    url: id => urls.get(id) || null,
+    size: id => { const r = mem.get(id); return r ? {w: r.w, h: r.h} : null; },
+    blob: id => (mem.get(id) || {}).blob || null,
+    async put(id, blob, w, h) {         // false: shown for now, but it could not be stored
+      keep(id, {blob, w, h});
+      const buf = await blob.arrayBuffer();
+      return !!(await run('readwrite', st => st.put({type: blob.type, buf, w, h}, id)));
+    },
+    load(id) {
+      if (mem.has(id)) return Promise.resolve(true);
+      if (!loading.has(id)) loading.set(id, run('readonly', st => st.get(id)).then(v => {
+        loading.delete(id);
+        if (!v || !v.buf) return false;
+        keep(id, {blob: new Blob([v.buf], {type: v.type || 'image/jpeg'}), w: v.w, h: v.h});
+        return true;
+      }));
+      return loading.get(id);
+    },
+    async keys() { const k = await run('readonly', st => st.getAllKeys()); return Array.isArray(k) ? k : []; },
+    del(id) { const u = urls.get(id); if (u) URL.revokeObjectURL(u); urls.delete(id); mem.delete(id); return run('readwrite', st => st.delete(id)); }
+  };
+})();
+const IMG_ID = /^i[0-9a-z]{4,40}$/;
+/* a picked file, made at most 1440px on its longer side (1024 when it has see-through parts, kept as PNG) */
+async function shrinkImage(file) {
+  const src = URL.createObjectURL(file);
+  try {
+    const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+    const iw = im.naturalWidth, ih = im.naturalHeight;
+    if (!iw || !ih) return null;
+    const alpha = /png|gif|webp|avif/.test(file.type) && hasAlpha(im);
+    const sc = Math.min(1, (alpha ? 1024 : 1440) / Math.max(iw, ih));
+    const w = Math.max(1, Math.round(iw * sc)), h = Math.max(1, Math.round(ih * sc));
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const cx = cv.getContext('2d');
+    if (!alpha) { cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); }
+    cx.drawImage(im, 0, 0, w, h);
+    const blob = await new Promise(res => cv.toBlob(res, alpha ? 'image/png' : 'image/jpeg', 0.84));
+    return blob ? {blob, w, h} : null;
+  } catch (e) { return null; }
+  finally { URL.revokeObjectURL(src); }
+}
+function hasAlpha(im) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 24;
+  const x = c.getContext('2d', {willReadFrequently: true});
+  x.drawImage(im, 0, 0, 24, 24);
+  try { const d = x.getImageData(0, 0, 24, 24).data; for (let i = 3; i < d.length; i += 4) if (d[i] < 250) return true; } catch (e) {}
+  return false;
+}
+const blobToData = b => new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(b); });
+
 /* ---------- model ----------
    Every note lives on one map: a home (bd = null; which one is hm) or the space inside another sticky
    (bd = that sticky's id). Any sticky has such a space; it holds whatever was put in it, and "board" in the
@@ -901,6 +1038,56 @@ const validIn = (opts, v) => opts.some(o => o[0] === v);
 let lastLink = {k: 'line', sh: 'curve'}, lastNote = {};
 const NOTE_CARRY = ['shape', 'look', 'fz', 'al', 'ff'];
 const clip = {note: null, link: null};    // a copied look (C2)
+/* Presets: saved ways a new sticky starts (colour, or the usual colours in turn; look; title; size; picture).
+   「いつもの」 (PRESET_AUTO) always comes first: the usual colours in turn and the look chosen last (C3).
+   ＋ asks which one to make; a long press on the map makes the one picked last (curPreset). */
+const PRESET_AUTO = 'p~', PRESET_ID = /^p[0-9a-z]{4,40}$/;
+let presets = [], curPreset = PRESET_AUTO;
+const presetOf = id => presets.find(p => p.id === id) || null;     // null: いつもの
+function cleanPreset(r) {
+  if (!r || typeof r !== 'object' || !PRESET_ID.test(String(r.id || ''))) return null;
+  const num = v => (Number.isFinite(+v) ? +v : 0);
+  const p = {id: String(r.id), name: String(r.name == null ? '' : r.name).replace(/\s+/g, ' ').trim().slice(0, 20) || 'プリセット'};
+  if (COLORS.includes(r.c)) p.c = r.c;
+  for (const k in NOTE_DEF) if (r[k] !== undefined && r[k] !== NOTE_DEF[k] && validIn(NOTE_OPTS[k], r[k])) p[k] = r[k];
+  if (r.ht) p.ht = true;
+  if (num(r.w) > 0 && Math.round(num(r.w)) !== W) p.w = clamp(Math.round(num(r.w)), MIN_W, MAX_W);
+  if (num(r.sh) > 0 && Math.round(num(r.sh)) !== H) p.sh = clamp(Math.round(num(r.sh)), MIN_H, MAX_H);
+  if (typeof r.img === 'string' && IMG_ID.test(r.img)) { p.img = r.img; if (r.iv === 'clear') p.iv = 'clear'; }
+  return p;
+}
+function cleanPresets(arr) {
+  const out = [], seen = new Set();
+  for (const r of arr) { const p = cleanPreset(r); if (p && !seen.has(p.id)) { seen.add(p.id); out.push(p); } }
+  return out;
+}
+const starterPresets = () => [
+  {name: '見出し', c: 'sky', look: 'bold', fz: 'l', w: 190},
+  {name: 'カード', look: 'card'},
+  {name: 'まる', c: 'pink', shape: 'round', al: 'center'},
+  {name: '大きめ', w: 220, sh: 150}
+].map((p, i) => Object.assign({id: 'p' + uid() + i}, p));
+const presetSize = p => ({w: (p && p.w) || W, h: (p && p.sh) || H});
+function presetInto(n, p) {              // a new sticky as the preset makes it
+  if (!p) { setLook(n, Object.assign({}, lastNote), NOTE_DEF); return; }
+  if (p.c) n.c = p.c;
+  const look = {};
+  for (const k in NOTE_DEF) if (p[k] !== undefined) look[k] = p[k];
+  setLook(n, look, NOTE_DEF);
+  if (p.ht) n.ht = true;
+  const sz = presetSize(p);
+  n.w = sz.w; n.sh = sz.h;
+  if (p.img) { n.img = p.img; if (p.iv) n.iv = p.iv; }
+}
+function presetFrom(n, name) {           // a preset that makes stickies like this one
+  const p = {id: 'p' + uid(), name, c: colorOf(n)};
+  for (const k in NOTE_DEF) if (nv(n, k) !== NOTE_DEF[k]) p[k] = nv(n, k);
+  if (n.ht) p.ht = true;
+  if (wOf(n) !== W) p.w = wOf(n);
+  if ((n.sh || H) !== H) p.sh = n.sh;
+  if (n.img) { p.img = n.img; if (n.iv) p.iv = n.iv; }
+  return p;
+}
 function setLook(obj, look, defs) {       // only what differs from the default is kept
   for (const k in look) { if (look[k] === defs[k]) delete obj[k]; else obj[k] = look[k]; }
 }
@@ -1025,11 +1212,12 @@ function save() {
     if (n.h) o.h = n.h;
     if (n.c) o.c = n.c;
     if (n.s) o.s = 1;
+    if (n.img) { o.img = n.img; if (n.iv) o.iv = n.iv; }
     lookOut(n, o, NOTE_DEF);
     arr.push(o);
   }
   const ls = [...links.values()].map(linkOut);
-  store.set(KEY, JSON.stringify({v: 6, notes: arr, links: ls, homes}));
+  store.set(KEY, JSON.stringify({v: 6, notes: arr, links: ls, homes, presets}));
   if (!persistAsked && navigator.storage && navigator.storage.persist) {
     persistAsked = true;
     navigator.storage.persist().catch(() => {});
@@ -1045,7 +1233,7 @@ function linkOut(l) {
 const views = {};                 // map key -> last view on that map
 function saveView() {
   views[bkey(curBoard)] = {x: view.x, y: view.y, z: view.z, w: innerWidth, h: innerHeight};
-  store.set(VKEY, JSON.stringify({vv: 2, cur: curBoard, hm: curHome, views, lk: lastLink, ln: lastNote}));
+  store.set(VKEY, JSON.stringify({vv: 2, cur: curBoard, hm: curHome, views, lk: lastLink, ln: lastNote, pr: curPreset}));
 }
 function restoreView(b) {
   const v = views[bkey(b)];
@@ -1087,6 +1275,7 @@ function sanitize(arr, v, larr) {
     };
     for (const k in NOTE_DEF) if (r[k] !== undefined && r[k] !== NOTE_DEF[k] && validIn(NOTE_OPTS[k], r[k])) n[k] = r[k];
     if (!n.bd && isHome(r.hm) && r.hm !== DEF_HOME) n.hm = r.hm.slice(0, 40);
+    if (typeof r.img === 'string' && IMG_ID.test(r.img)) { n.img = r.img; if (r.iv === 'clear') n.iv = 'clear'; }
     if (v < 6 && r.p) n._p = String(r.p);
     const board = v < 5 && !!r.bo;
     if (v < 3 && !board) {
@@ -1225,6 +1414,14 @@ function paintNote(n) {
     if (sv && !r.stp) { r.stp = document.createElement('span'); r.stp.className = 'stp'; r.stp.setAttribute('aria-hidden', 'true'); r.el.append(r.stp); }
     if (sv) r.stp.textContent = sv; else if (r.stp) { r.stp.remove(); r.stp = null; }
   }
+  const im = n.img || '', iu = im ? imgs.url(im) : null, ik = im ? im + (iu ? '' : '?') + (n.iv || '') : '';
+  if (r.ik !== ik) {
+    r.ik = ik;
+    cl.toggle('has-img', !!im);
+    cl.toggle('iv-clear', !!im && n.iv === 'clear');
+    if (iu) r.el.style.setProperty('--img', 'url("' + iu + '")'); else r.el.style.removeProperty('--img');
+    if (im && !iu) imgs.load(im).then(ok => { if (ok) imageReady(im); });
+  }
   const ic = boardCount(n.id);
   cl.toggle('lead', linksOf(n.id).length !== 1 || ic > 0);   // named from far away: not just hanging off one other sticky
   cl.toggle('picked', picked.has(n.id));
@@ -1242,6 +1439,11 @@ function paintNote(n) {
     r.iv = iv; r.ib.hidden = !iv; r.ibn.textContent = iv;
     r.ib.setAttribute('aria-label', iv ? 'この付箋の中を開く（' + iv + '件）' : 'この付箋の中に入れる');
   }
+}
+function imageReady(id) {         // a picture just read from storage: the stickies showing it, and the details
+  for (const n of here()) if (n.img === id) paintNote(n);
+  const e = editing && notes.get(editing);
+  if (e && e.img === id) fillImage(e);
 }
 function placeNote(n) {
   const r = els.get(n.id);
@@ -2222,11 +2424,14 @@ function freeSpotNear(x, y, w, h) {
   }
   return {x, y};
 }
-function createNote(x, y) {
+/* a new sticky, as the preset picked last makes it. x, y: where a usual-sized one would have its top left
+   corner; a bigger or smaller one keeps the same middle, or with corner the same top left */
+function createNote(x, y, corner) {
   const n = {id: uid(), bd: curBoard, t: '', b: '', w: W, sh: H, x: Math.round(x), y: Math.round(y),
     c: NEW_CYCLE[idsOn(curBoard).length % NEW_CYCLE.length], at: Date.now()};
   if (!curBoard) setHome(n, curHome);
-  setLook(n, Object.assign({}, lastNote), NOTE_DEF);      // the shape, look and text settings chosen last
+  presetInto(n, presetOf(curPreset));
+  if (!corner) { n.x = Math.round(x + (W - wOf(n)) / 2); n.y = Math.round(y + (H - n.sh) / 2); }
   notes.set(n.id, n);
   fresh.add(n.id);
   renderAll();
@@ -3025,6 +3230,7 @@ function fillEditorMeta(n) {
     b.className = 'c-' + c; b.setAttribute('aria-label', CNAME[c]);
     swatches.append(b);
   }
+  fillImage(n);
   fillLook(n);
 }
 function openEditor(id, focus) {
@@ -3068,7 +3274,7 @@ function finishEdit(id) {
   if (!n) return;
   if (fresh.has(id)) {
     fresh.delete(id);
-    if (!n.t.trim() && !n.b.trim() && !idsOn(id).length) { removeIds([id]); return; }   // its lines go with it
+    if (!n.t.trim() && !n.b.trim() && !n.img && !idsOn(id).length) { removeIds([id]); return; }   // its lines go with it
   }
   save();
 }
@@ -3141,7 +3347,7 @@ linksList.addEventListener('click', e => { const b = e.target.closest('[data-go]
 $('#add-linked').addEventListener('click', () => {        // a new sticky beside this one, joined to it by a line
   const from = notes.get(editing);
   if (!from) return;
-  const slot = slotBeside(from), n = createNote(slot.x, slot.y);
+  const slot = slotBeside(from), n = createNote(slot.x, slot.y, true);
   addLink(from.id, n.id);
   openEditor(n.id, true);
 });
@@ -3153,6 +3359,80 @@ swatches.addEventListener('click', e => {
   renderAll(); save(); fillEditorMeta(n);
 });
 $('#del').addEventListener('click', () => { if (editing) deleteNote(editing); });
+
+/* ---------- a picture behind a sticky ----------
+   Picked in the details; a sticky still at the usual size takes the picture's proportions. Each change can
+   be undone. */
+const IV_OPTS = [['soft', '読みやすく'], ['clear', '画像をくっきり']];
+const imgFile = $('#imgfile');
+let imgTake = null;
+function pickImage(take) {          // take({id, w, h}) once the picked file is made small and stored
+  imgTake = take;
+  imgFile.value = '';
+  imgFile.click();
+}
+imgFile.addEventListener('change', async () => {
+  const f = imgFile.files && imgFile.files[0], take = imgTake;
+  imgTake = null;
+  imgFile.value = '';
+  if (!f || !take) return;
+  const got = await shrinkImage(f);
+  if (!got) { toast('この画像は読み込めませんでした'); return; }
+  const id = 'i' + uid(), stored = await imgs.put(id, got.blob, got.w, got.h);
+  take({id, w: got.w, h: got.h});
+  if (!stored) toast('この画面では画像を保存できません（閉じると消えます）');
+});
+const fitHeight = (w, iw, ih) => clamp(Math.round(w * ih / iw), MIN_H, 480);
+function changeImage(n, change, msg) {
+  const keep = {img: n.img, iv: n.iv, sh: n.sh};
+  change(n);
+  n._mk = null; n.at = Date.now(); n.s = false;
+  renderAll(); save();
+  if (editing === n.id) fillEditorMeta(n);
+  toast(msg, '元に戻す', () => {
+    for (const k of ['img', 'iv']) { if (keep[k] === undefined) delete n[k]; else n[k] = keep[k]; }
+    n.sh = keep.sh; n._mk = null;
+    renderAll(); save();
+    if (editing === n.id) fillEditorMeta(n);
+  });
+}
+function fillImage(n) {
+  const box = $('#img-box'), acts = document.createElement('div');
+  acts.className = 'acts';
+  const chip = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = t; b.addEventListener('click', fn); acts.append(b); return b; };
+  const take = got => {
+    const m = notes.get(n.id);
+    if (!m) return;
+    changeImage(m, x => {
+      const first = !x.img;
+      x.img = got.id;
+      if (first && wOf(x) === W && (x.sh || H) === H) x.sh = fitHeight(W, got.w, got.h);
+    }, '背景に画像を付けました');
+  };
+  if (!n.img) {
+    chip('＋ 画像を選ぶ', () => pickImage(take));
+    const p = document.createElement('p');
+    p.className = 'hint'; p.textContent = '写真や画像を、この付箋の背景にできます。';
+    box.replaceChildren(acts, p);
+    return;
+  }
+  const row = document.createElement('div'), th = document.createElement('span'), u = imgs.url(n.img);
+  row.className = 'img-row'; th.className = 'img-th';
+  if (u) th.style.backgroundImage = 'url("' + u + '")';
+  else imgs.load(n.img).then(ok => { if (ok) imageReady(n.img); });
+  chip('変える', () => pickImage(take));
+  chip('外す', () => changeImage(n, x => { delete x.img; delete x.iv; }, '背景の画像を外しました'));
+  const sz = imgs.size(n.img);
+  if (sz && Math.abs(hOf(n) - fitHeight(wOf(n), sz.w, sz.h)) > 2) chip('画像の形に合わせる', () => changeImage(n, x => { x.sh = fitHeight(wOf(x), sz.w, sz.h); }, '画像の形に合わせました'));
+  row.append(th, acts);
+  box.replaceChildren(row, choiceRow('文字', IV_OPTS, n.iv || 'soft', v => {
+    const m = notes.get(editing);
+    if (!m) return;
+    if (v === 'soft') delete m.iv; else m.iv = v;
+    m.at = Date.now();
+    renderAll(); save(); fillImage(m);
+  }));
+}
 $('#nl-copy').addEventListener('click', () => {
   const n = notes.get(editing);
   if (!n) return;
@@ -3430,6 +3710,7 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (!$('#modal').hidden) closeModal();
   else if (!$('#menu').hidden) closeMenu();
+  else if (!ptray.hidden) closeTray();
   else if (!drawer.hidden) closeDrawer();
   else if (selMode) exitSelect();
   else if (selLink) selectLink(null);
@@ -3606,12 +3887,172 @@ tree.addEventListener('click', e => {
 $('#btn-tree').addEventListener('click', () => (drawer.hidden ? openDrawer(selId || placeTarget || curBoard) : closeDrawer()));
 $('#btn-fit').addEventListener('click', () => fitAll(true));
 function addAtCenter() {
-  const R = visibleRegion();
+  const R = visibleRegion(), sz = presetSize(presetOf(curPreset));
   const w = toWorld((R.left + R.right) / 2, (R.top + R.bottom) / 2 - 40);
-  const s = freeSpotNear(Math.round(w.x - W / 2), Math.round(w.y - H / 2), W, H);
-  startInline(createNote(s.x, s.y).id);
+  const s = freeSpotNear(Math.round(w.x - sz.w / 2), Math.round(w.y - sz.h / 2), sz.w, sz.h);
+  startInline(createNote(s.x, s.y, true).id);
 }
-$('#btn-add').addEventListener('click', () => addAtCenter());
+
+/* ---------- presets: ＋ asks which one ----------
+   The tray lists 「いつもの」, the presets and 「新しく作る」; a tap makes that sticky in the middle of the screen
+   and remembers it for long presses. 編集 turns a tap into changing (or deleting) that preset. */
+const ptray = $('#ptray');
+let ptEdit = false;
+function presetPreview(p, box) {
+  const look = p || lastNote, sz = presetSize(p);
+  const c = (p && p.c) || NEW_CYCLE[idsOn(curBoard).length % NEW_CYCLE.length], sc = styleCls(look);
+  const el = document.createElement('div');
+  el.className = 'note pv c-' + c + (sc ? ' ' + sc : '') + (p && p.ht ? ' ht' : '') + (p && p.img ? ' has-img' + (p.iv === 'clear' ? ' iv-clear' : '') : '');
+  el.style.width = sz.w + 'px'; el.style.height = sz.h + 'px';
+  el.style.transform = 'translate(-50%,-50%) scale(' + r1(Math.min(box.w / sz.w, box.h / sz.h) * 100) / 100 + ')';
+  el.innerHTML = '<div class="card"><div class="t">タイトル</div><div class="x">メモ</div></div>';
+  const st = nv(look, 'stamp');
+  if (st) { const sp = document.createElement('span'); sp.className = 'stp'; sp.textContent = st; el.append(sp); }
+  if (p && p.img) {
+    const set = () => { const u = imgs.url(p.img); if (u) el.style.setProperty('--img', 'url("' + u + '")'); };
+    if (imgs.url(p.img)) set(); else imgs.load(p.img).then(ok => { if (ok) set(); });
+  }
+  const wrap = document.createElement('span');
+  wrap.className = 'pv-box';
+  wrap.style.width = box.w + 'px'; wrap.style.height = box.h + 'px';
+  wrap.append(el);
+  return wrap;
+}
+function markAddBtn() {             // the ＋ shows the colour of the preset a long press makes
+  const p = presetOf(curPreset), dot = $('#add-dot');
+  dot.hidden = !p;
+  dot.className = p ? (p.c ? 'c-' + p.c : 'auto') : '';
+  $('#btn-add').setAttribute('aria-label', '付箋を追加（' + (p ? p.name : 'いつもの') + '）');
+}
+function fillTray() {
+  const tile = p => {
+    const id = p ? p.id : PRESET_AUTO, b = document.createElement('button');
+    b.type = 'button'; b.className = 'pt' + (id === curPreset ? ' cur' : ''); b.dataset.p = id;
+    b.append(presetPreview(p, {w: 76, h: 46}));
+    const nm = document.createElement('span'); nm.className = 'pt-name'; nm.textContent = p ? p.name : 'いつもの';
+    b.append(nm);
+    if (ptEdit && !p) b.disabled = true;
+    if (ptEdit && p) b.insertAdjacentHTML('beforeend', '<span class="pt-ed" aria-hidden="true">' + PEN_ICON + '</span>');
+    b.setAttribute('aria-label', (ptEdit ? '編集：' : '') + nm.textContent + (id === curPreset ? '（いま選んでいる）' : ''));
+    return b;
+  };
+  const add = document.createElement('button');
+  add.type = 'button'; add.className = 'pt'; add.dataset.p = '+';
+  add.innerHTML = '<span class="pv-box pt-plus" style="width:76px;height:46px">' + PLUS_ICON + '</span><span class="pt-name">新しく作る</span>';
+  $('#pt-list').replaceChildren(tile(null), ...presets.map(tile), add);
+  const ed = $('#pt-edit');
+  ed.textContent = ptEdit ? '終わる' : '編集';
+  ed.setAttribute('aria-pressed', String(ptEdit));
+  $('#pt-hint').textContent = ptEdit ? '直したいものをタップ。「いつもの」は最後に選んだ見た目になります。'
+    : '何もない所を長押しして作るときも、ここで最後に選んだもので作られます。';
+}
+function openTray() {
+  if (inlineId) endInline();
+  if (editing) closeEditor();
+  closeMenu();
+  selectLink(null);
+  ptEdit = false;
+  fillTray();
+  ptray.hidden = false;
+  $('#btn-add').setAttribute('aria-expanded', 'true');
+  const cur = ptray.querySelector('.pt.cur');
+  if (cur) cur.scrollIntoView({block: 'nearest', inline: 'nearest'});
+}
+function closeTray() { ptray.hidden = true; $('#btn-add').setAttribute('aria-expanded', 'false'); }
+$('#btn-add').addEventListener('click', () => (ptray.hidden ? openTray() : closeTray()));
+$('#pt-close').addEventListener('click', closeTray);
+$('#pt-edit').addEventListener('click', () => { ptEdit = !ptEdit; fillTray(); });
+$('#pt-list').addEventListener('click', e => {
+  const b = e.target.closest('button[data-p]');
+  if (!b || b.disabled) return;
+  const id = b.dataset.p;
+  closeTray();
+  if (id === '+') { editPreset(null); return; }
+  if (ptEdit) { editPreset(presetOf(id)); return; }
+  curPreset = id;
+  saveView(); markAddBtn();
+  addAtCenter();
+});
+document.addEventListener('pointerdown', e => {
+  if (!ptray.hidden && !ptray.contains(e.target) && !e.target.closest('#btn-add')) closeTray();
+}, true);
+function nextPresetName() {
+  for (let i = presets.length + 1; ; i++) { const nm = 'プリセット' + i; if (!presets.some(p => p.name === nm)) return nm; }
+}
+/* the editor: p a preset to change, or null for a new one (from: a sticky to start it from) */
+async function editPreset(p, from) {
+  const isNew = !p;
+  const d = p ? Object.assign({}, p) : from ? presetFrom(from, short(titleOf(from), 12)) : {id: 'p' + uid(), name: nextPresetName()};
+  const wrap = document.createElement('div'), pvw = document.createElement('div'), rows = document.createElement('div');
+  wrap.className = 'pe'; pvw.className = 'pe-pv'; rows.className = 'srows';
+  const name = nameField(d.name);
+  name.maxLength = 20; name.setAttribute('aria-label', 'プリセットの名前');
+  wrap.append(pvw, name, rows);
+  const set = (k, v, def) => { if (v === def || v === undefined) delete d[k]; else d[k] = v; draw(); };
+  const draw = () => {
+    pvw.replaceChildren(presetPreview(d, {w: 220, h: 100}));
+    const r = [];
+    const col = choiceRow('色', [['', '順番'], ...COLORS.map(c => [c, CNAME[c]])], d.c || '', v => set('c', v || undefined), 'c-');
+    const auto = col.querySelector('.swb.c-');
+    if (auto) { auto.className = 'swb auto'; auto.setAttribute('aria-label', '色：いつもの順番'); }
+    r.push(col);
+    for (const k of Object.keys(NOTE_DEF)) r.push(choiceRow(NOTE_NAMES[k], NOTE_OPTS[k], d[k] !== undefined ? d[k] : NOTE_DEF[k], v => set(k, v, NOTE_DEF[k])));
+    r.push(choiceRow('タイトル', [['0', 'なし'], ['1', 'あり']], d.ht ? '1' : '0', v => set('ht', v === '1' ? true : undefined)));
+    const sz = presetSize(d), known = PRESET_SIZES.find(x => x[2] === sz.w && x[3] === sz.h);
+    const opts = PRESET_SIZES.map(x => [x[0], x[1]]);
+    if (!known) opts.push(['own', 'いまの大きさ（' + sz.w + '×' + sz.h + '）']);
+    r.push(choiceRow('大きさ', opts, known ? known[0] : 'own', v => {
+      const x = PRESET_SIZES.find(y => y[0] === v);
+      if (!x) return;
+      if (x[2] === W) delete d.w; else d.w = x[2];
+      if (x[3] === H) delete d.sh; else d.sh = x[3];
+      draw();
+    }));
+    const ir = document.createElement('div'), lab = document.createElement('span'), box = document.createElement('div');
+    ir.className = 'srow'; lab.textContent = '背景の画像'; box.className = 'opts';
+    const chip = (t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = t; b.addEventListener('click', fn); box.append(b); };
+    const take = got => {
+      const first = !d.img;
+      d.img = got.id;
+      if (first && !d.w && !d.sh) d.sh = fitHeight(W, got.w, got.h);
+      draw();
+    };
+    if (d.img) { chip('変える', () => pickImage(take)); chip('外す', () => { delete d.img; delete d.iv; draw(); }); }
+    else chip('＋ 画像を選ぶ', () => pickImage(take));
+    ir.append(lab, box);
+    r.push(ir);
+    if (d.img) r.push(choiceRow('文字', IV_OPTS, d.iv || 'soft', v => set('iv', v, 'soft')));
+    rows.replaceChildren(...r);
+  };
+  draw();
+  const btns = [{label: 'やめる', k: null}, {label: isNew ? '作る' : '保存', k: 'ok', cls: 'primary'}];
+  if (!isNew) btns.unshift({label: '削除', k: 'del', cls: 'danger'});
+  const res = await ask(isNew ? (from ? 'この付箋をプリセットにする' : '新しいプリセット') : 'プリセットを編集', wrap, btns);
+  if (res === 'ok') {
+    d.name = name.value;
+    const clean = cleanPreset(d);
+    const i = presets.findIndex(x => x.id === clean.id);
+    if (i >= 0) presets[i] = clean; else presets.push(clean);
+    curPreset = clean.id;
+    save(); saveView(); markAddBtn();
+    toast(isNew ? '「' + short(clean.name, 12) + '」を作りました。下の ＋ から選べます' : '「' + short(clean.name, 12) + '」を保存しました');
+  } else if (res === 'del') {
+    const i = presets.findIndex(x => x.id === p.id);
+    if (i < 0) return;
+    presets.splice(i, 1);
+    const wasCur = curPreset === p.id;
+    if (wasCur) curPreset = PRESET_AUTO;
+    save(); saveView(); markAddBtn();
+    toast('「' + short(p.name, 12) + '」を削除しました', '元に戻す', () => {
+      if (presetOf(p.id)) return;
+      presets.splice(Math.min(i, presets.length), 0, p);
+      if (wasCur) curPreset = p.id;
+      save(); saveView(); markAddBtn();
+    });
+  }
+}
+const PRESET_SIZES = [['n', 'ふつう', W, H], ['wide', '横長', 240, H], ['big', '大きめ', 220, 150], ['sq', '正方形', 150, 150]];
+$('#nl-preset').addEventListener('click', () => { const n = notes.get(editing); if (n) editPreset(null, n); });
 const menu = $('#menu');
 function openMenu() {
   selectLink(null);
@@ -3685,14 +4126,27 @@ function stamp() {
   const d = new Date(), p = v => String(v).padStart(2, '0');
   return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes());
 }
-function exportJSON() {
-  return JSON.stringify({app: 'fusen-map', v: 6, exportedAt: new Date().toISOString(),
-    homes: homes.map(h => ({id: h.id, name: h.name})),
+function usedImages() {             // the pictures something still shows
+  const out = new Set();
+  for (const n of notes.values()) if (n.img) out.add(n.img);
+  for (const p of presets) if (p.img) out.add(p.img);
+  return out;
+}
+async function exportJSON() {
+  const images = {};
+  for (const id of usedImages()) {
+    if (!(await imgs.load(id))) continue;
+    const d = await blobToData(imgs.blob(id)), sz = imgs.size(id);
+    if (d) images[id] = {d, w: sz.w, h: sz.h};
+  }
+  return JSON.stringify({app: 'fusen-map', v: 6, exportedAt: new Date().toISOString(), images,
+    homes: homes.map(h => ({id: h.id, name: h.name})), presets,
     notes: [...notes.values()].map(n => {
       const o = lookOut(n, {id: n.id, bd: n.bd || null, ht: !!n.ht, t: n.t, b: n.b,
         w: Math.round(n.w || W), sh: Math.round(n.sh || H), h: n.h || 0,
         x: Math.round(n.x), y: Math.round(n.y), c: n.c || null, at: n.at}, NOTE_DEF);
       if (!n.bd && n.hm) o.hm = n.hm;
+      if (n.img) { o.img = n.img; if (n.iv) o.iv = n.iv; }
       return o;
     }),
     links: [...links.values()].map(linkOut)});
@@ -3715,18 +4169,25 @@ function copyFallback(json) {
     {label: '閉じる', k: 'close'}
   ]);
 }
-function exportData() {
+async function exportData() {
   closeMenu();
-  const json = exportJSON();
+  const json = await exportJSON();
   const name = 'fusen-map-' + stamp() + '.json';
   if (IN_FRAME) { copyFallback(json); return; }
   try {
     const file = new File([json], name, {type: 'application/json'});
     if (navigator.canShare && navigator.canShare({files: [file]})) {
-      navigator.share({files: [file], title: name}).then(() => toast('書き出しました'), err => { if (!err || err.name !== 'AbortError') copyFallback(json); });
+      navigator.share({files: [file], title: name}).then(() => toast('書き出しました'), err => {
+        if (err && err.name === 'AbortError') return;
+        if (err && err.name === 'NotAllowedError' && download(json, name)) return;   // reading the pictures took the tap's moment
+        copyFallback(json);
+      });
       return;
     }
   } catch (e) {}
+  if (!download(json, name)) copyFallback(json);
+}
+function download(json, name) {
   try {
     const url = URL.createObjectURL(new Blob([json], {type: 'application/json'}));
     const a = document.createElement('a');
@@ -3734,7 +4195,16 @@ function exportData() {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
     toast('書き出しました（' + name + '）');
-  } catch (e) { copyFallback(json); }
+    return true;
+  } catch (e) { return false; }
+}
+async function importImages(data) {   // the pictures a backup carries, into storage
+  const all = data && data.images && typeof data.images === 'object' ? data.images : {};
+  for (const id of Object.keys(all)) {
+    const r = all[id];
+    if (!IMG_ID.test(id) || !r || typeof r.d !== 'string' || !/^data:image\//.test(r.d)) continue;
+    try { const b = await (await fetch(r.d)).blob(); await imgs.put(id, b, +r.w || 1, +r.h || 1); } catch (e) {}
+  }
 }
 $('#m-export').addEventListener('click', exportData);
 $('#m-import').addEventListener('click', () => { closeMenu(); $('#file').click(); });
@@ -3754,8 +4224,14 @@ $('#file').addEventListener('change', async () => {
     {label: '追加する', k: 'add', cls: 'primary'}
   ]);
   if (!choice) return;
+  await importImages(data);
   const snap = [...notes.values()].map(n => Object.assign({}, n)), snapL = [...links.values()].map(l => Object.assign({}, l)), cur = curBoard;
-  const snapH = homes.map(h => Object.assign({}, h)), curH = curHome;
+  const snapH = homes.map(h => Object.assign({}, h)), curH = curHome, snapP = presets.slice(), curP = curPreset;
+  const filePresets = data && Array.isArray(data.presets) ? cleanPresets(data.presets) : null;
+  if (filePresets && choice === 'replace') presets = filePresets;
+  else if (filePresets) for (const fp of filePresets) if (!presetOf(fp.id)) presets.push(fp);
+  if (!presetOf(curPreset)) curPreset = PRESET_AUTO;
+  markAddBtn();
   const fileHomes = data && Array.isArray(data.homes) ? cleanHomes(data.homes) : null;
   let addedHomes = 0;
   if (choice === 'replace') {
@@ -3790,7 +4266,7 @@ $('#file').addEventListener('change', async () => {
   renderAll(); save(); fitAll(true);
   toast(choice === 'replace' ? '置き換えました' : clean.length + '件を追加しました' + (addedHomes ? '（ホーム' + addedHomes + 'つ）' : ''), '元に戻す', () => {
     notes.clear(); links.clear();
-    homes = snapH;
+    homes = snapH; presets = snapP; curPreset = curP; markAddBtn();
     for (const n of snap) notes.set(n.id, n);
     for (const l of snapL) links.set(l.id, l);
     curBoard = cur && notes.has(cur) ? cur : null; curHome = curH;
@@ -3837,6 +4313,8 @@ $('#m-help').addEventListener('click', () => {
   const ul = document.createElement('ul');
   [
     '何もない所を長押し → 付箋ができて、指を離すとそのまま書ける',
+    '下の ＋ → どの付箋（プリセット）で作るかを選ぶ。長押しで作るときも、最後に選んだプリセットになる。「編集」でプリセットの見た目・大きさ・画像を変えたり消したりでき、付箋の詳細の「この付箋をプリセットにする」でも作れる',
+    '付箋の詳細の「背景の画像」→ 写真や画像を付箋の背景にできる（文字を読みやすく／画像をくっきり）',
     '付箋をタップ → その場で書き直せる（下のバーの「完了」で終わる）',
     '書いている間、付箋の右下の丸を引っぱる → 大きさを自由に変えられる（元の大きさや正方形の所で止まりやすい）',
     '書いている間、付箋の右の ● を引っぱってほかの付箋の上で離す → 線でつながる。何もない所で離すと、つながった新しい付箋ができる',
@@ -3946,10 +4424,13 @@ function boot() {
   const arr = got && got.notes;
   if (arr) { homes = cleanHomes(loaded.homes); for (const n of arr) notes.set(n.id, n); for (const l of got.links) links.set(l.id, l); }
   else seed();
+  presets = loaded && Array.isArray(loaded.presets) ? cleanPresets(loaded.presets) : starterPresets();
   let v = null;
   try { v = JSON.parse(store.get(VKEY) || 'null'); } catch (e) {}
   if (v && v.lk && typeof v.lk === 'object') for (const k in LINK_DEF) if (validIn(LINK_OPTS[k], v.lk[k])) lastLink[k] = v.lk[k];
   if (v && v.ln && typeof v.ln === 'object') for (const k of NOTE_CARRY) if (validIn(NOTE_OPTS[k], v.ln[k])) lastNote[k] = v.ln[k];
+  if (v && typeof v.pr === 'string' && presetOf(v.pr)) curPreset = v.pr;
+  markAddBtn();
   if (arr && v && v.views) {
     if (v.vv >= 2) Object.assign(views, v.views);        // views saved before vv 2 were mostly the far-out overview: open readable once
     if ('' in views) { if (!views[DEF_HOME]) views[DEF_HOME] = views['']; delete views['']; }   // the one home, before there were several
@@ -3982,6 +4463,10 @@ function boot() {
       renderAll(); save(); fitAll(true);
     }), 900);
   }
+  if (arr && store.ok) setTimeout(async () => {     // after a restart nothing can be undone into them any more
+    const used = usedImages();
+    for (const k of await imgs.keys()) if (!used.has(k)) imgs.del(k);
+  }, 8000);
   const themeChange = () => { readPalette(); markMini(); };
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeChange);
   new MutationObserver(themeChange).observe(html, {attributes: true, attributeFilter: ['data-theme']});
@@ -3991,7 +4476,7 @@ function boot() {
   }
 }
 boot();
-window.__fusen = {notes, links, get selLink() { return selLink; }, view, get g() { return g; }, get editing() { return editing; }, get inline() { return inlineId; }, get board() { return curBoard; }, get home() { return curHome; }, get homes() { return homes; }, picked, get selMode() { return selMode; }, renderAll, fitAll, select, enterBoard};
+window.__fusen = {notes, links, get selLink() { return selLink; }, view, get g() { return g; }, get editing() { return editing; }, get inline() { return inlineId; }, get board() { return curBoard; }, get home() { return curHome; }, get homes() { return homes; }, picked, get selMode() { return selMode; }, get presets() { return presets; }, get preset() { return curPreset; }, renderAll, fitAll, select, enterBoard};
 })();
 
 </script>
